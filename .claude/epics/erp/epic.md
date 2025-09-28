@@ -2,9 +2,10 @@
 name: erp
 status: backlog
 created: 2025-09-28T18:05:29Z
+updated: 2025-09-28T23:39:45Z
 progress: 0%
 prd: .claude/prds/erp.md
-github: [Will be updated when synced to GitHub]
+github: https://github.com/lucky7slw/construction-erp/issues/1
 ---
 
 # Epic: Construction AI-ERP System
@@ -175,16 +176,16 @@ High-level task categories for streamlined implementation:
 
 ## Tasks Created
 
-- [ ] 001.md - Foundation Setup & Development Environment (parallel: false)
-- [ ] 002.md - Database Schema & Authentication System (parallel: false)
-- [ ] 003.md - Core Backend API Services (parallel: true)
-- [ ] 004.md - Web Frontend Framework & Design System (parallel: true)
-- [ ] 005.md - Native iOS Mobile App Foundation (parallel: true)
-- [ ] 006.md - AI Integration Engine & Gemini API (parallel: true)
-- [ ] 007.md - Real-time Synchronization & WebSocket Engine (parallel: false)
-- [ ] 008.md - Project Management Features & Gantt Charts (parallel: true)
-- [ ] 009.md - CRM & AI-Powered Quote Generation System (parallel: true)
-- [ ] 010.md - External Integrations & Production Deployment (parallel: false)
+- [ ] #2 - Foundation Setup & Development Environment (parallel: false)
+- [ ] #3 - Database Schema & Authentication System (parallel: false)
+- [ ] #4 - Core Backend API Services (parallel: true)
+- [ ] #5 - Web Frontend Framework & Design System (parallel: true)
+- [ ] #6 - Native iOS Mobile App Foundation (parallel: true)
+- [ ] #7 - AI Integration Engine & Gemini API (parallel: true)
+- [ ] #8 - Real-time Synchronization & WebSocket Engine (parallel: false)
+- [ ] #9 - Project Management Features & Gantt Charts (parallel: true)
+- [ ] #10 - CRM & AI-Powered Quote Generation System (parallel: true)
+- [ ] #11 - External Integrations & Production Deployment (parallel: false)
 
 **Total tasks**: 10
 **Parallel tasks**: 6
