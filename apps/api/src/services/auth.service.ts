@@ -37,7 +37,7 @@ export class AuthService {
     this.redis = redis;
     this.jwtSecret = jwtSecret;
     this.jwtRefreshSecret = jwtRefreshSecret;
-    this.accessTokenExpiry = '15m'; // 15 minutes
+    this.accessTokenExpiry = '24h'; // 24 hours
     this.refreshTokenExpiry = '7d'; // 7 days
   }
 
