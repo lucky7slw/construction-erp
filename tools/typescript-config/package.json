@@ -1,0 +1,11 @@
+{
+  "name": "@hhhomespm/typescript-config",
+  "version": "0.1.0",
+  "description": "Shared TypeScript configuration",
+  "main": "index.js",
+  "files": [
+    "base.json",
+    "nextjs.json",
+    "node.json"
+  ]
+}

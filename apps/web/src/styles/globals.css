@@ -1,0 +1,264 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&display=swap');
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 222.2 84% 4.9%;
+    --card: 0 0% 100%;
+    --card-foreground: 222.2 84% 4.9%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222.2 84% 4.9%;
+    --primary: 24 100% 50%;
+    --primary-foreground: 210 40% 98%;
+    --secondary: 210 40% 96%;
+    --secondary-foreground: 222.2 84% 4.9%;
+    --muted: 210 40% 96%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+    --accent: 210 40% 96%;
+    --accent-foreground: 222.2 84% 4.9%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 24 100% 50%;
+    --radius: 0.5rem;
+  }
+
+  .dark {
+    --background: 222.2 84% 4.9%;
+    --foreground: 210 40% 98%;
+    --card: 222.2 84% 4.9%;
+    --card-foreground: 210 40% 98%;
+    --popover: 222.2 84% 4.9%;
+    --popover-foreground: 210 40% 98%;
+    --primary: 24 100% 50%;
+    --primary-foreground: 222.2 84% 4.9%;
+    --secondary: 217.2 32.6% 17.5%;
+    --secondary-foreground: 210 40% 98%;
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 65.1%;
+    --accent: 217.2 32.6% 17.5%;
+    --accent-foreground: 210 40% 98%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 217.2 32.6% 17.5%;
+    --input: 217.2 32.6% 17.5%;
+    --ring: 24 100% 50%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  html {
+    @apply scroll-smooth;
+  }
+
+  body {
+    @apply bg-background text-foreground font-sans antialiased;
+    font-feature-settings: 'rlig' 1, 'calt' 1;
+  }
+
+  /* Improved focus styles for accessibility */
+  *:focus-visible {
+    @apply outline-none ring-2 ring-ring ring-offset-2;
+  }
+
+  /* Smooth transitions for interactive elements */
+  button, a, input, textarea, select {
+    @apply transition-colors duration-200;
+  }
+
+  /* Enhanced scrollbar styling */
+  .scrollbar-thin {
+    scrollbar-width: thin;
+    scrollbar-color: theme('colors.gray.400') theme('colors.gray.100');
+  }
+
+  .scrollbar-thin::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar-track {
+    @apply bg-gray-100 rounded-lg;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar-thumb {
+    @apply bg-gray-400 rounded-lg;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar-thumb:hover {
+    @apply bg-gray-500;
+  }
+
+  /* Glass morphism utilities */
+  .glass-light {
+    backdrop-filter: blur(16px) saturate(180%);
+    background: rgba(255, 255, 255, 0.75);
+    border: 1px solid rgba(255, 255, 255, 0.125);
+  }
+
+  .glass-dark {
+    backdrop-filter: blur(16px) saturate(180%);
+    background: rgba(17, 25, 40, 0.75);
+    border: 1px solid rgba(255, 255, 255, 0.125);
+  }
+
+  /* Animation utilities for reduced motion */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+
+  /* Print styles */
+  @media print {
+    * {
+      print-color-adjust: exact !important;
+    }
+
+    .no-print {
+      display: none !important;
+    }
+  }
+
+  /* High contrast mode support */
+  @media (prefers-contrast: high) {
+    .contrast-more\:border-black {
+      border-color: black;
+    }
+
+    .contrast-more\:text-black {
+      color: black;
+    }
+  }
+}
+
+@layer components {
+  /* Button variants */
+  .btn-primary {
+    @apply inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50;
+    @apply bg-primary text-primary-foreground hover:bg-primary/90;
+    @apply h-10 px-4 py-2;
+  }
+
+  .btn-secondary {
+    @apply inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50;
+    @apply bg-secondary text-secondary-foreground hover:bg-secondary/80;
+    @apply h-10 px-4 py-2;
+  }
+
+  .btn-ghost {
+    @apply inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50;
+    @apply hover:bg-accent hover:text-accent-foreground;
+    @apply h-10 px-4 py-2;
+  }
+
+  .btn-destructive {
+    @apply inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50;
+    @apply bg-destructive text-destructive-foreground hover:bg-destructive/90;
+    @apply h-10 px-4 py-2;
+  }
+
+  /* Input variants */
+  .input-default {
+    @apply flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50;
+  }
+
+  /* Card variants */
+  .card-default {
+    @apply rounded-lg border bg-card text-card-foreground shadow-sm;
+  }
+
+  .card-interactive {
+    @apply rounded-lg border bg-card text-card-foreground shadow-sm transition-all duration-200 hover:shadow-md hover:scale-[1.01];
+  }
+
+  /* Layout utilities */
+  .page-container {
+    @apply container mx-auto px-4 sm:px-6 lg:px-8;
+  }
+
+  .section-padding {
+    @apply py-16 sm:py-20 lg:py-24;
+  }
+
+  .content-width {
+    @apply max-w-7xl mx-auto;
+  }
+
+  /* Typography utilities */
+  .heading-xl {
+    @apply text-4xl font-bold tracking-tight sm:text-5xl lg:text-6xl;
+  }
+
+  .heading-lg {
+    @apply text-3xl font-bold tracking-tight sm:text-4xl;
+  }
+
+  .heading-md {
+    @apply text-2xl font-semibold tracking-tight sm:text-3xl;
+  }
+
+  .heading-sm {
+    @apply text-xl font-semibold tracking-tight sm:text-2xl;
+  }
+
+  .body-lg {
+    @apply text-lg leading-relaxed text-muted-foreground;
+  }
+
+  .body-md {
+    @apply text-base leading-relaxed text-muted-foreground;
+  }
+
+  .body-sm {
+    @apply text-sm leading-relaxed text-muted-foreground;
+  }
+
+  /* Status indicators */
+  .status-success {
+    @apply inline-flex items-center rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-medium text-green-800;
+  }
+
+  .status-warning {
+    @apply inline-flex items-center rounded-full bg-yellow-100 px-2.5 py-0.5 text-xs font-medium text-yellow-800;
+  }
+
+  .status-error {
+    @apply inline-flex items-center rounded-full bg-red-100 px-2.5 py-0.5 text-xs font-medium text-red-800;
+  }
+
+  .status-info {
+    @apply inline-flex items-center rounded-full bg-blue-100 px-2.5 py-0.5 text-xs font-medium text-blue-800;
+  }
+
+  /* Dark mode variants */
+  .dark .status-success {
+    @apply bg-green-900/50 text-green-300;
+  }
+
+  .dark .status-warning {
+    @apply bg-yellow-900/50 text-yellow-300;
+  }
+
+  .dark .status-error {
+    @apply bg-red-900/50 text-red-300;
+  }
+
+  .dark .status-info {
+    @apply bg-blue-900/50 text-blue-300;
+  }
+}
