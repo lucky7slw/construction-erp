@@ -3,6 +3,7 @@ export { Input, inputVariants } from './input';
 export { Card, CardHeader, CardFooter, CardTitle, CardDescription, CardContent, cardVariants } from './card';
 export { Dialog, DialogTrigger, DialogContent, DialogHeader, DialogFooter, DialogTitle, DialogDescription } from './dialog';
 export { AlertDialog, AlertDialogTrigger, AlertDialogContent, AlertDialogHeader, AlertDialogFooter, AlertDialogTitle, AlertDialogDescription, AlertDialogAction, AlertDialogCancel } from './alert-dialog';
+export { ScrollArea, ScrollBar } from './scroll-area';
 export { Toast, ToastProvider, ToastViewport, ToastTitle, ToastDescription, ToastClose, ToastAction, useToast } from './toast';
 export { Toaster } from './toaster';
 export { Spinner, PageSpinner, LoadingOverlay, spinnerVariants } from './spinner';
