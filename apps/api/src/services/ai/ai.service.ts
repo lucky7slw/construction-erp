@@ -17,6 +17,11 @@ import {
   GeminiAPIError,
   PromptError,
 } from '../../types/ai';
+import {
+  AIQuoteGeneration,
+  AIQuoteGenerationSchema,
+  GenerateQuoteRequest,
+} from '../../types/quotes';
 
 export class AIService {
   private geminiClient: GeminiClient;
@@ -395,6 +400,94 @@ export class AIService {
 
     // If no JSON found, throw error
     throw new PromptError('No valid JSON found in AI response', { response });
+  }
+
+  /**
+   * Generate AI-powered construction quote
+   */
+  async generateQuote(
+    request: GenerateQuoteRequest,
+    userId?: string,
+    companyId?: string
+  ): Promise<AIResponse<AIQuoteGeneration>> {
+    try {
+      // Get historical projects for context
+      let historicalProjectsData = '';
+      if (companyId) {
+        const historicalProjects = await this.prisma.project.findMany({
+          where: {
+            companyId,
+            status: 'COMPLETED',
+          },
+          select: {
+            id: true,
+            name: true,
+            description: true,
+            budget: true,
+            actualCost: true,
+          },
+          take: 10,
+          orderBy: { createdAt: 'desc' },
+        });
+
+        if (historicalProjects.length > 0) {
+          historicalProjectsData = historicalProjects
+            .map((p) => ({
+              id: p.id,
+              name: p.name,
+              description: p.description || '',
+              budget: Number(p.budget || 0),
+              actualCost: Number(p.actualCost || 0),
+              variance: p.budget && p.actualCost
+                ? ((Number(p.actualCost) - Number(p.budget)) / Number(p.budget)) * 100
+                : 0,
+            }))
+            .map((p) => `${p.name}: Budget ${p.budget}, Actual ${p.actualCost} (${p.variance.toFixed(1)}% variance)`)
+            .join(', ');
+        }
+      }
+
+      const variables = {
+        projectType: request.projectType,
+        scope: request.scope,
+        requirements: request.requirements,
+        constraints: request.constraints || '',
+        historicalProjects: historicalProjectsData,
+        profitMargin: request.profitMargin || 15,
+      };
+
+      const prompt = renderPrompt('QUOTE_GENERATION', variables);
+      const response = await this.geminiClient.generateContent(
+        prompt,
+        userId || 'system'
+      );
+
+      const cleanResponse = this.extractJsonFromResponse(response);
+      const parsed = JSON.parse(cleanResponse);
+      const quote = AIQuoteGenerationSchema.parse(parsed);
+
+      // Store quote generation
+      if (userId) {
+        await this.storeAIContext(userId, 'quote_generation', {
+          request,
+          quote,
+          timestamp: new Date(),
+        });
+      }
+
+      return {
+        success: true,
+        data: quote,
+        confidence: quote.confidence,
+      };
+
+    } catch (error) {
+      throw new AIServiceError(
+        'Failed to generate quote',
+        'QUOTE_GENERATION_ERROR',
+        { request, error }
+      );
+    }
   }
 
   /**

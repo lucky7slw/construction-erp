@@ -464,4 +464,106 @@ export async function aiRoutes(
       return handleAIError(error, reply);
     }
   });
+
+  // AI-powered quote generation
+  fastify.post('/generate-quote', {
+    preHandler: [aiCache],
+    schema: {
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: 'object',
+        properties: {
+          projectType: { type: 'string', minLength: 1 },
+          scope: { type: 'string', minLength: 1 },
+          requirements: { type: 'string', minLength: 1 },
+          constraints: { type: 'string' },
+          profitMargin: { type: 'number', minimum: 0, maximum: 100 },
+        },
+        required: ['projectType', 'scope', 'requirements'],
+      },
+      response: {
+        200: {
+          type: 'object',
+          properties: {
+            success: { type: 'boolean' },
+            data: {
+              type: 'object',
+              properties: {
+                items: {
+                  type: 'array',
+                  items: {
+                    type: 'object',
+                    properties: {
+                      description: { type: 'string' },
+                      quantity: { type: 'number' },
+                      unitPrice: { type: 'number' },
+                      category: { type: 'string' },
+                    },
+                  },
+                },
+                subtotal: { type: 'number' },
+                historicalProjects: {
+                  type: 'array',
+                  items: {
+                    type: 'object',
+                    properties: {
+                      id: { type: 'string' },
+                      name: { type: 'string' },
+                      similarity: { type: 'number' },
+                      budget: { type: 'number' },
+                      actualCost: { type: 'number' },
+                    },
+                  },
+                },
+                marketRates: { type: 'object' },
+                confidence: { type: 'number', minimum: 0, maximum: 1 },
+                reasoning: { type: 'string' },
+                assumptions: {
+                  type: 'array',
+                  items: { type: 'string' },
+                },
+                risks: {
+                  type: 'array',
+                  items: {
+                    type: 'object',
+                    properties: {
+                      description: { type: 'string' },
+                      impact: { type: 'string' },
+                      mitigation: { type: 'string' },
+                    },
+                  },
+                },
+              },
+            },
+            confidence: { type: 'number', minimum: 0, maximum: 1 },
+          },
+        },
+      },
+      tags: ['AI'],
+      summary: 'Generate AI-powered construction quote',
+      description: 'Automatically generate detailed construction quotes using AI analysis of project requirements and historical data',
+    },
+  }, async (request: FastifyRequest, reply: FastifyReply) => {
+    try {
+      const body = request.body as any;
+      const userId = (request as any).user?.id;
+      const companyId = (request as any).user?.companyId;
+
+      const result = await aiService.generateQuote(
+        {
+          projectType: body.projectType,
+          scope: body.scope,
+          requirements: body.requirements,
+          constraints: body.constraints,
+          profitMargin: body.profitMargin,
+        },
+        userId,
+        companyId
+      );
+
+      return reply.send(result);
+    } catch (error) {
+      return handleAIError(error, reply);
+    }
+  });
 }

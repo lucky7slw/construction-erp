@@ -4,6 +4,7 @@ import * as React from 'react';
 import { useAuthStore } from '@/lib/store/auth-store';
 import { Sidebar } from '@/components/layout/sidebar';
 import { Header } from '@/components/layout/header';
+import { AIAssistant } from '@/components/ai/ai-assistant';
 import { cn } from '@/lib/utils';
 
 interface AppLayoutProps {
@@ -78,6 +79,9 @@ export function AppLayout({ children }: AppLayoutProps) {
           </div>
         </main>
       </div>
+
+      {/* AI Assistant - Always available */}
+      <AIAssistant />
     </div>
   );
 }
