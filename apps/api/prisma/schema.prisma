@@ -71,6 +71,11 @@ model User {
   createdMoodBoards       MoodBoard[]              @relation("MoodBoardCreatedBy")
   approvedMoodBoards      MoodBoard[]              @relation("MoodBoardApprovedBy")
   moodBoardComments       MoodBoardComment[]       @relation("MoodBoardCommentBy")
+  photoAnnotations        PhotoAnnotation[]        @relation("PhotoAnnotationCreator")
+  photoComments           PhotoComment[]           @relation("PhotoCommentCreator")
+  integrations            Integration[]            @relation("UserIntegrations")
+
+  moduleAccess            ModuleAccess[]
 
   @@map("users")
 }
@@ -85,6 +90,8 @@ model Role {
 
   // Relations
   permissions RolePermission[]
+
+  moduleAccess ModuleAccess[]
   userRoles   UserRole[]
 
   @@map("roles")
@@ -103,6 +110,23 @@ model Permission {
 
   @@unique([resource, action])
   @@map("permissions")
+}
+
+model ModuleAccess {
+  id        String   @id @default(cuid())
+  roleId    String?
+  userId    String?
+  module    String // e.g., 'projects', 'tasks', 'estimates', 'quotes', 'invoices'
+  isVisible Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  role Role? @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  user User? @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([roleId, module])
+  @@unique([userId, module])
+  @@map("module_access")
 }
 
 model RolePermission {
@@ -165,6 +189,7 @@ model Company {
   email          String?
   website        String?
   logo           String? // URL to logo file
+  favicon        String? // URL to favicon file
   isActive       Boolean  @default(true)
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
@@ -181,6 +206,7 @@ model Company {
   estimateTemplates EstimateTemplate[]
   costDatabaseItems CostDatabaseItem[]
   estimateAssemblies EstimateAssembly[]
+  deckProjects DeckProject[]
 
   @@map("companies")
 }
@@ -224,6 +250,7 @@ model Customer {
   interactions CustomerInteraction[]
   selections   Selection[]
   moodBoards   MoodBoard[]
+  deckProjects DeckProject[]
 
   @@map("customers")
 }
@@ -303,6 +330,7 @@ model Project {
   moodBoards      MoodBoard[]
   rfis            RFI[]
   submittals      Submittal[]
+  deckProjects    DeckProject[]
 
   @@index([companyId])
   @@index([customerId])
@@ -449,6 +477,10 @@ model Expense {
   aiCategorized Boolean         @default(false)
   createdAt     DateTime        @default(now())
   updatedAt     DateTime        @updatedAt
+  
+  // QuickBooks sync
+  syncedToQuickBooks Boolean @default(false)
+  quickBooksId       String?
 
   user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   project  Project?  @relation(fields: [projectId], references: [id], onDelete: SetNull)
@@ -872,11 +904,73 @@ model ProjectFile {
 
   project  Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
   uploader User    @relation(fields: [uploadedBy], references: [id])
+  annotations PhotoAnnotation[]
+  comments    PhotoComment[]
 
   @@index([projectId])
   @@index([category])
   @@index([uploadedBy])
   @@map("project_files")
+}
+
+
+// Photo Documentation Models
+model PhotoAnnotation {
+  id        String   @id @default(cuid())
+  fileId    String
+  type      String
+  data      Json
+  createdBy String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  file    ProjectFile @relation(fields: [fileId], references: [id], onDelete: Cascade)
+  creator User        @relation("PhotoAnnotationCreator", fields: [createdBy], references: [id])
+
+  @@index([fileId])
+  @@map("photo_annotations")
+}
+
+model PhotoComment {
+  id        String   @id @default(cuid())
+  fileId    String
+  content   String
+  createdBy String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  file    ProjectFile @relation(fields: [fileId], references: [id], onDelete: Cascade)
+  creator User        @relation("PhotoCommentCreator", fields: [createdBy], references: [id])
+
+  @@index([fileId])
+  @@map("photo_comments")
+}
+// Third-Party Integrations
+enum IntegrationProvider {
+  GOOGLE
+  QUICKBOOKS
+  STRIPE
+  PROCORE
+  BUILDERTREND
+}
+
+model Integration {
+  id           String              @id @default(cuid())
+  userId       String
+  provider     IntegrationProvider
+  accessToken  String
+  refreshToken String?
+  expiresAt    DateTime?
+  metadata     Json?
+  isActive     Boolean             @default(true)
+  createdAt    DateTime            @default(now())
+  updatedAt    DateTime            @updatedAt
+
+  user User @relation("UserIntegrations", fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, provider])
+  @@index([userId])
+  @@map("integrations")
 }
 
 // Daily Logs for site activity tracking
@@ -1861,4 +1955,535 @@ model Submittal {
   @@index([type])
   @@index([submittedDate])
   @@map("submittals")
+}
+
+// ============================================================================
+// DECK BUILDING AI MODULE
+// ============================================================================
+
+enum DeckType {
+  GROUND_LEVEL      // <30" high, may not require permit in some jurisdictions
+  ELEVATED          // >30" high, typically requires permit
+  MULTI_LEVEL       // Multiple elevation changes
+  ROOFTOP           // Deck on roof structure
+  FLOATING          // Freestanding deck
+  ATTACHED          // Attached to house structure
+  WRAPAROUND        // Wraps around multiple sides
+  POOL              // Pool deck
+  HOT_TUB           // Hot tub deck
+  CUSTOM            // Custom design
+}
+
+enum DeckShape {
+  RECTANGLE
+  SQUARE
+  L_SHAPE
+  U_SHAPE
+  OCTAGON
+  HEXAGON
+  CIRCULAR
+  CUSTOM
+}
+
+enum DeckMaterialType {
+  PRESSURE_TREATED_LUMBER
+  CEDAR
+  REDWOOD
+  COMPOSITE
+  PVC
+  ALUMINUM
+  STEEL
+  IPE
+  MAHOGANY
+  BAMBOO
+  CONCRETE
+}
+
+enum RailingType {
+  WOOD_BALUSTERS
+  METAL_BALUSTERS
+  CABLE
+  GLASS
+  COMPOSITE
+  VINYL
+  ALUMINUM
+  NONE
+}
+
+enum FoundationType {
+  CONCRETE_FOOTING
+  PRECAST_PIER
+  HELICAL_PIER
+  GROUND_SCREW
+  DECK_BLOCKS
+  SLAB_ON_GRADE
+}
+
+enum DeckProjectStatus {
+  PLANNING          // AI planning phase
+  DESIGN_REVIEW     // Customer reviewing AI design
+  PERMIT_RESEARCH   // Researching permit requirements
+  PERMIT_PENDING    // Permits submitted, awaiting approval
+  PERMIT_APPROVED   // Ready to build
+  IN_CONSTRUCTION   // Under construction
+  COMPLETED         // Deck completed
+  CANCELLED         // Project cancelled
+}
+
+enum PermitStatus {
+  NOT_REQUIRED
+  RESEARCHING       // AI is researching requirements
+  REQUIRED          // Permit identified as required
+  APPLICATION_READY // Application prepared by AI
+  SUBMITTED         // Submitted to jurisdiction
+  UNDER_REVIEW      // Under review by jurisdiction
+  APPROVED          // Permit approved
+  REJECTED          // Permit rejected
+  EXPIRED           // Permit expired
+}
+
+enum CodeRequirementType {
+  STRUCTURAL
+  SAFETY
+  ACCESSIBILITY
+  ENERGY
+  ENVIRONMENTAL
+  ZONING
+  SETBACK
+  HEIGHT_RESTRICTION
+  LOT_COVERAGE
+  OTHER
+}
+
+model DeckProject {
+  id                  String             @id @default(cuid())
+  projectId           String?            // Link to main Project if part of larger construction
+  companyId           String
+  customerId          String?
+  name                String
+  description         String?
+  status              DeckProjectStatus  @default(PLANNING)
+  deckType            DeckType
+  deckShape           DeckShape
+  primaryMaterial     DeckMaterialType
+  railingType         RailingType
+  foundationType      FoundationType
+
+  // Dimensions
+  length              Decimal            @db.Decimal(10, 2) // feet
+  width               Decimal            @db.Decimal(10, 2) // feet
+  height              Decimal?           @db.Decimal(10, 2) // feet from ground
+  totalSquareFeet     Decimal            @db.Decimal(10, 2)
+
+  // Location & Property Data
+  propertyAddress     String
+  city                String
+  state               String
+  postalCode          String
+  county              String
+  parcelId            String?
+  latitude            Decimal?           @db.Decimal(10, 8)
+  longitude           Decimal?           @db.Decimal(11, 8)
+
+  // AI Analysis
+  aiGenerated         Boolean            @default(true)
+  aiConfidence        Decimal?           @db.Decimal(3, 2) // 0.00-1.00
+  aiRecommendations   Json?              // AI suggestions and reasoning
+  aiRiskAssessment    Json?              // Identified risks and mitigation
+
+  // Cost Estimates
+  estimatedMaterialCost Decimal?         @db.Decimal(12, 2)
+  estimatedLaborCost    Decimal?         @db.Decimal(12, 2)
+  estimatedPermitCost   Decimal?         @db.Decimal(10, 2)
+  estimatedTotalCost    Decimal?         @db.Decimal(12, 2)
+  actualMaterialCost    Decimal          @default(0) @db.Decimal(12, 2)
+  actualLaborCost       Decimal          @default(0) @db.Decimal(12, 2)
+  actualPermitCost      Decimal          @default(0) @db.Decimal(10, 2)
+  actualTotalCost       Decimal          @default(0) @db.Decimal(12, 2)
+
+  // Timeline
+  estimatedLaborHours   Decimal?         @db.Decimal(8, 2)
+  estimatedDuration     Int?             // days
+  plannedStartDate      DateTime?
+  plannedCompletionDate DateTime?
+  actualStartDate       DateTime?
+  actualCompletionDate  DateTime?
+
+  // Customer Preferences
+  budgetRange           String?          // e.g., "$5000-$10000"
+  mustHaveFeatures      Json?            // Array of required features
+  niceToHaveFeatures    Json?            // Array of optional features
+  stylePreferences      Json?            // Customer style preferences
+
+  createdById         String
+  createdAt           DateTime           @default(now())
+  updatedAt           DateTime           @updatedAt
+
+  // Relations
+  company             Company            @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  project             Project?           @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  customer            Customer?          @relation(fields: [customerId], references: [id], onDelete: SetNull)
+  designs             DeckDesign[]
+  materials           DeckMaterial[]
+  permits             DeckPermit[]
+  propertyData        DeckPropertyData?
+  codeRequirements    DeckCodeRequirement[]
+  laborEstimates      DeckLaborEstimate[]
+  costBreakdown       DeckCostBreakdown[]
+
+  @@index([companyId])
+  @@index([projectId])
+  @@index([customerId])
+  @@index([status])
+  @@index([state, city, postalCode]) // For permit lookup
+  @@index([county]) // For GIS lookup
+  @@map("deck_projects")
+}
+
+model DeckDesign {
+  id                String           @id @default(cuid())
+  deckProjectId     String
+  version           Int              @default(1)
+  name              String
+  description       String?
+  isActive          Boolean          @default(true) // Current active design
+
+  // Detailed Dimensions
+  deckingArea       Decimal          @db.Decimal(10, 2) // sq ft
+  railingLength     Decimal?         @db.Decimal(10, 2) // linear feet
+  stairCount        Int              @default(0)
+  stairWidth        Decimal?         @db.Decimal(6, 2)
+  stairRise         Decimal?         @db.Decimal(6, 2)
+  stairRun          Decimal?         @db.Decimal(6, 2)
+
+  // Structural Details
+  joistSpacing      Decimal          @default(16) @db.Decimal(4, 1) // inches
+  beamSize          String?          // e.g., "2x10", "4x8"
+  postSize          String?          // e.g., "4x4", "6x6"
+  postCount         Int?
+  footingDepth      Decimal?         @db.Decimal(6, 2) // feet (min 30" per IRC)
+  footingDiameter   Decimal?         @db.Decimal(6, 2) // inches
+  footingCount      Int?
+
+  // Load Requirements (from building codes)
+  liveLoad          Decimal          @default(40) @db.Decimal(6, 2) // PSF
+  deadLoad          Decimal          @default(10) @db.Decimal(6, 2) // PSF
+  snowLoad          Decimal?         @db.Decimal(6, 2) // PSF if applicable
+
+  // Features
+  hasBuiltInSeating Boolean          @default(false)
+  hasPrivacyScreen  Boolean          @default(false)
+  hasLighting       Boolean          @default(false)
+  hasPergola        Boolean          @default(false)
+  hasGate           Boolean          @default(false)
+  customFeatures    Json?            // Array of custom features
+
+  // 3D/CAD Data
+  cadData           Json?            // CAD coordinates and geometry
+  threeDModel       String?          // URL to 3D model file
+  drawingPdf        String?          // URL to PDF drawing
+
+  // AI Analysis
+  aiGenerated       Boolean          @default(true)
+  aiConfidence      Decimal?         @db.Decimal(3, 2)
+  aiReasoning       String?          // Why AI chose this design
+
+  createdAt         DateTime         @default(now())
+  updatedAt         DateTime         @updatedAt
+
+  deckProject       DeckProject      @relation(fields: [deckProjectId], references: [id], onDelete: Cascade)
+
+  @@unique([deckProjectId, version])
+  @@index([deckProjectId])
+  @@index([isActive])
+  @@map("deck_designs")
+}
+
+model DeckMaterial {
+  id                String           @id @default(cuid())
+  deckProjectId     String
+  category          String           // Decking, Framing, Railing, Fasteners, Concrete, etc.
+  name              String
+  description       String?
+  manufacturer      String?
+  model             String?
+  sku               String?
+
+  // Quantity
+  quantity          Decimal          @db.Decimal(10, 3)
+  unit              String           // board feet, linear feet, pieces, bags, cubic yards
+
+  // Pricing
+  unitCost          Decimal?         @db.Decimal(10, 2)
+  totalCost         Decimal?         @db.Decimal(12, 2)
+  priceSource       String?          // "1build", "manual", "historical"
+  priceDate         DateTime?        // When price was retrieved
+
+  // Specifications
+  dimensions        String?          // e.g., "2x6x12", "5/4x6"
+  grade             String?          // #1, #2, Select, etc.
+  treatment         String?          // Pressure treated, kiln dried, etc.
+  color             String?
+  finish            String?
+
+  // Waste Factor
+  wasteFactor       Decimal          @default(10) @db.Decimal(5, 2) // percentage
+  quantityWithWaste Decimal?         @db.Decimal(10, 3)
+
+  // AI Insights
+  aiSuggested       Boolean          @default(false)
+  aiAlternatives    Json?            // Alternative materials suggested
+  aiCostComparison  Json?            // Cost vs alternatives
+
+  // Supplier Info
+  supplierName      String?
+  supplierSku       String?
+  leadTime          Int?             // days
+  inStock           Boolean          @default(true)
+
+  sortOrder         Int              @default(0)
+  createdAt         DateTime         @default(now())
+  updatedAt         DateTime         @updatedAt
+
+  deckProject       DeckProject      @relation(fields: [deckProjectId], references: [id], onDelete: Cascade)
+
+  @@index([deckProjectId])
+  @@index([category])
+  @@map("deck_materials")
+}
+
+model DeckPermit {
+  id                  String           @id @default(cuid())
+  deckProjectId       String
+  permitType          String           // Building, Zoning, Environmental, HOA, etc.
+  jurisdictionName    String           // City/County name
+  jurisdictionType    String           // City, County, State
+  status              PermitStatus     @default(RESEARCHING)
+
+  // Permit Details
+  permitNumber        String?
+  description         String?
+  isRequired          Boolean          @default(false)
+  exemptionReason     String?          // If not required, why
+
+  // Requirements (AI extracted)
+  requirements        Json?            // Array of requirement objects
+  requiredDocuments   Json?            // Array of document types needed
+  fees                Json?            // Fee structure
+  estimatedCost       Decimal?         @db.Decimal(10, 2)
+  actualCost          Decimal?         @db.Decimal(10, 2)
+
+  // Application Process
+  applicationUrl      String?
+  applicationPdfUrl   String?          // Generated application PDF
+  submittedDate       DateTime?
+  approvedDate        DateTime?
+  expirationDate      DateTime?
+
+  // Inspections
+  inspectionsRequired Json?            // Array of inspection types
+  inspectionSchedule  Json?            // Scheduled inspections
+
+  // Contact Info
+  contactName         String?
+  contactPhone        String?
+  contactEmail        String?
+  officeAddress       String?
+  officeHours         String?
+
+  // AI Analysis
+  aiExtracted         Boolean          @default(false)
+  aiConfidence        Decimal?         @db.Decimal(3, 2)
+  sourceUrl           String?          // Where AI found the info
+  lastVerified        DateTime?        // Last verification date
+
+  notes               String?
+  createdAt           DateTime         @default(now())
+  updatedAt           DateTime         @updatedAt
+
+  deckProject         DeckProject      @relation(fields: [deckProjectId], references: [id], onDelete: Cascade)
+
+  @@index([deckProjectId])
+  @@index([status])
+  @@index([jurisdictionName])
+  @@map("deck_permits")
+}
+
+model DeckPropertyData {
+  id                  String           @id @default(cuid())
+  deckProjectId       String           @unique
+
+  // Parcel Information
+  parcelId            String
+  propertyAddress     String
+  legalDescription    String?
+  lotSize             Decimal?         @db.Decimal(12, 2) // sq ft
+  lotDimensions       String?
+
+  // Zoning
+  zoningCode          String?
+  zoningDescription   String?
+  landUse             String?
+
+  // Restrictions & Requirements
+  setbackFront        Decimal?         @db.Decimal(6, 2) // feet
+  setbackRear         Decimal?         @db.Decimal(6, 2)
+  setbackSide         Decimal?         @db.Decimal(6, 2)
+  maxLotCoverage      Decimal?         @db.Decimal(5, 2) // percentage
+  maxHeight           Decimal?         @db.Decimal(6, 2) // feet
+
+  // HOA Info
+  hasHOA              Boolean          @default(false)
+  hoaName             String?
+  hoaContactName      String?
+  hoaContactPhone     String?
+  hoaContactEmail     String?
+  hoaApprovalRequired Boolean          @default(false)
+
+  // GIS Data
+  gisLayerData        Json?            // Complete GIS response
+  topographyData      Json?            // Elevation, slope data
+  floodZone           String?
+  wetlands            Boolean          @default(false)
+
+  // Plot Plan Data
+  plotPlanUrl         String?          // URL to plot plan from GIS
+  surveyUrl           String?          // Survey document if available
+  aerialImageUrl      String?          // Aerial/satellite image
+
+  // Utilities
+  waterService        String?
+  sewerService        String?
+  electricService     String?
+  gasService          String?
+
+  // Environmental
+  soilType            String?
+  drainageNotes       String?
+  treesOnProperty     Boolean?
+  protectedTrees      Boolean?
+
+  // Data Sources
+  gisDataSource       String?          // Which GIS API/service
+  gisRetrievedAt      DateTime?
+  dataVerified        Boolean          @default(false)
+  verifiedBy          String?
+  verifiedAt          DateTime?
+
+  createdAt           DateTime         @default(now())
+  updatedAt           DateTime         @updatedAt
+
+  deckProject         DeckProject      @relation(fields: [deckProjectId], references: [id], onDelete: Cascade)
+
+  @@index([parcelId])
+  @@map("deck_property_data")
+}
+
+model DeckCodeRequirement {
+  id                  String              @id @default(cuid())
+  deckProjectId       String
+  requirementType     CodeRequirementType
+  codeReference       String              // IRC R507.3, etc.
+  codeEdition         String?             // "2021 IRC", "2018 IBC"
+  jurisdictionCode    String?             // State/local code if different
+
+  title               String
+  description         String
+  requirement         String              // The actual requirement text
+  applies             Boolean             @default(true)
+  compliance          String?             // How the design complies
+
+  // Numeric Requirements
+  minimumValue        Decimal?            @db.Decimal(10, 3)
+  maximumValue        Decimal?            @db.Decimal(10, 3)
+  unit                String?             // feet, inches, PSF, etc.
+
+  // AI Analysis
+  aiExtracted         Boolean             @default(true)
+  aiConfidence        Decimal?            @db.Decimal(3, 2)
+  sourceDocument      String?             // URL to source document
+
+  priority            String              @default("MEDIUM") // LOW, MEDIUM, HIGH, CRITICAL
+  category            String?             // Structural, Safety, Accessibility
+
+  createdAt           DateTime            @default(now())
+  updatedAt           DateTime            @updatedAt
+
+  deckProject         DeckProject         @relation(fields: [deckProjectId], references: [id], onDelete: Cascade)
+
+  @@index([deckProjectId])
+  @@index([requirementType])
+  @@index([codeReference])
+  @@map("deck_code_requirements")
+}
+
+model DeckLaborEstimate {
+  id                  String           @id @default(cuid())
+  deckProjectId       String
+  taskName            String
+  description         String?
+  skillLevel          String           // Apprentice, Journeyman, Master
+
+  // Time Estimates
+  estimatedHours      Decimal          @db.Decimal(8, 2)
+  crewSize            Int              @default(1)
+  totalCrewHours      Decimal          @db.Decimal(8, 2)
+
+  // Cost Estimates
+  hourlyRate          Decimal?         @db.Decimal(8, 2)
+  totalLaborCost      Decimal?         @db.Decimal(12, 2)
+
+  // Complexity Factors
+  difficultyLevel     String?          // Easy, Medium, Hard, Expert
+  weatherDependency   Boolean          @default(true)
+  equipmentRequired   Json?            // Array of equipment needed
+
+  // AI Analysis
+  aiCalculated        Boolean          @default(true)
+  aiConfidence        Decimal?         @db.Decimal(3, 2)
+  aiReasoning         String?
+  historicalAverage   Decimal?         @db.Decimal(8, 2) // From similar projects
+
+  sortOrder           Int              @default(0)
+  createdAt           DateTime         @default(now())
+  updatedAt           DateTime         @updatedAt
+
+  deckProject         DeckProject      @relation(fields: [deckProjectId], references: [id], onDelete: Cascade)
+
+  @@index([deckProjectId])
+  @@map("deck_labor_estimates")
+}
+
+model DeckCostBreakdown {
+  id                  String           @id @default(cuid())
+  deckProjectId       String
+  category            String           // Materials, Labor, Permits, Equipment, Overhead, Profit
+  subCategory         String?
+  description         String
+
+  estimatedCost       Decimal          @db.Decimal(12, 2)
+  actualCost          Decimal          @default(0) @db.Decimal(12, 2)
+  variance            Decimal          @default(0) @db.Decimal(12, 2)
+  variancePercent     Decimal          @default(0) @db.Decimal(5, 2)
+
+  // Pricing Details
+  quantity            Decimal?         @db.Decimal(10, 3)
+  unitCost            Decimal?         @db.Decimal(10, 2)
+  unit                String?
+
+  // AI Insights
+  aiOptimization      Json?            // AI suggestions for cost savings
+  aiAlternatives      Json?            // Alternative options
+  marketComparison    Json?            // Market price comparison
+
+  notes               String?
+  sortOrder           Int              @default(0)
+  createdAt           DateTime         @default(now())
+  updatedAt           DateTime         @updatedAt
+
+  deckProject         DeckProject      @relation(fields: [deckProjectId], references: [id], onDelete: Cascade)
+
+  @@index([deckProjectId])
+  @@index([category])
+  @@map("deck_cost_breakdown")
 }

@@ -48,23 +48,6 @@ export function Header({ onMenuClick, sidebarCollapsed, onToggleCollapse }: Head
           <span className="sr-only">Open main menu</span>
         </Button>
 
-        {/* Desktop collapse button */}
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={onToggleCollapse}
-          className="hidden lg:inline-flex"
-        >
-          {sidebarCollapsed ? (
-            <ChevronRight className="h-5 w-5" />
-          ) : (
-            <ChevronLeft className="h-5 w-5" />
-          )}
-          <span className="sr-only">
-            {sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-          </span>
-        </Button>
-
         {/* Search */}
         <div className="relative hidden sm:block">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />

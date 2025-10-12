@@ -21,7 +21,6 @@ import { dailyLogsRoutes } from './routes/daily-logs.routes';
 import { rfisRoutes } from './routes/rfis.routes';
 import { submittalsRoutes } from './routes/submittals.routes';
 import { teamRoutes } from './routes/team.routes';
-import { photosRoutes } from './routes/photos.routes';
 import { changeOrdersRoutes } from './routes/change-orders.routes';
 import { purchaseOrdersRoutes } from './routes/purchase-orders.routes';
 import { takeoffsRoutes } from './routes/takeoffs.routes';
@@ -29,7 +28,14 @@ import { bidsRoutes } from './routes/bids.routes';
 import { selectionsRoutes } from './routes/selections.routes';
 import { moodBoardsRoutes } from './routes/mood-boards.routes';
 import { invoicesRoutes } from './routes/invoices.routes';
+import deckRoutes from './routes/deck.routes';
+import photosRoutes from './routes/photos.routes';
 import { createAuthMiddleware } from './middleware/auth.middleware';
+import aiAutomationRoutes from './routes/ai-automation.routes';
+import integrationsRoutes from './routes/integrations.routes';
+import auditLogsRoutes from './routes/audit-logs.routes';
+import automationRoutes from './routes/automation.routes';
+import moduleAccessRoutes from './routes/module-access.routes';
 import { fileStorage } from './lib/file-storage';
 import { AIService } from './services/ai/ai.service';
 import type { AIConfig } from './types/ai';
@@ -243,6 +249,27 @@ async function registerRoutes() {
     });
   }, { prefix: '/api/v1' });
 
+
+  // Public OAuth callback routes (no auth required)
+  await server.register(async function(fastify) {
+    const { GoogleIntegrationService } = await import('./services/integrations/google.service');
+    const { QuickBooksIntegrationService } = await import('./services/integrations/quickbooks.service');
+    const googleService = new GoogleIntegrationService(prisma);
+    const quickbooksService = new QuickBooksIntegrationService(prisma);
+
+    fastify.get('/integrations/google/callback', async (request, reply) => {
+      const { code, state: userId } = request.query as { code: string; state: string };
+      await googleService.handleCallback(code, userId);
+      return reply.redirect(`${process.env.WEB_BASE_URL}/settings?tab=integrations&success=google`);
+    });
+
+    fastify.get('/integrations/quickbooks/callback', async (request, reply) => {
+      const url = request.url;
+      const { state: userId } = request.query as { state: string };
+      await quickbooksService.handleCallback(url, userId);
+      return reply.redirect(`${process.env.WEB_BASE_URL}/settings?tab=integrations&success=quickbooks`);
+    });
+  }, { prefix: '/api/v1' });
   // Protected API v1 routes for project management
   await server.register(async function(fastify) {
     // Add authentication middleware to all routes in this context
@@ -330,10 +357,6 @@ async function registerRoutes() {
     });
 
     // Photos routes
-    await fastify.register(photosRoutes, {
-      prefix: '/photos',
-      prisma
-    });
 
     // Change orders routes
     await fastify.register(changeOrdersRoutes, {
@@ -374,6 +397,48 @@ async function registerRoutes() {
     // Invoices routes
     await fastify.register(invoicesRoutes, {
       prefix: '/invoices',
+      prisma
+    });
+
+    // Deck Builder routes
+     await fastify.register(deckRoutes, {
+       prefix: '/deck',
+       prisma
+     });
+
+    // Photos routes
+    await fastify.register(photosRoutes, {
+      prefix: '/photos',
+      prisma
+    });
+
+    // AI Automation routes
+    await fastify.register(aiAutomationRoutes, {
+      prefix: '/ai-automation',
+      prisma
+    });
+
+    // Integrations routes
+    await fastify.register(integrationsRoutes, {
+      prefix: '/integrations',
+      prisma
+    });
+
+    // Audit logs routes (super admin only)
+    await fastify.register(auditLogsRoutes, {
+      prefix: '/audit-logs',
+      prisma
+    });
+
+    // Automation routes
+    await fastify.register(automationRoutes, {
+      prefix: '/automation',
+      prisma
+    });
+
+    // Module access routes
+    await fastify.register(moduleAccessRoutes, {
+      prefix: '/module-access',
       prisma
     });
 
@@ -479,6 +544,10 @@ async function start() {
     // Initialize WebSocket service AFTER server is started
     wsService = new WebSocketService(server.server, authService, redis);
     server.log.info('WebSocket service initialized');
+
+    // Start automated backup and calendar sync
+    const { startScheduler } = await import('./lib/scheduler');
+    startScheduler(prisma);
 
     server.log.info(`🚀 Construction ERP API server listening on http://${host}:${port}`);
     server.log.info(`📚 API Documentation available at http://${host}:${port}/docs`);

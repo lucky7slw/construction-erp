@@ -7,6 +7,7 @@ import { useAuthStore } from '@/lib/store/auth-store';
 import { apiClient } from '@/lib/api/client';
 import { WebSocketProvider } from '@/lib/websocket/provider';
 import { ThemeProvider } from '@/components/theme-provider';
+import { ThemeProvider as BrandingThemeProvider } from '@/lib/theme-provider';
 
 interface ProvidersProps {
   children: React.ReactNode;
@@ -63,20 +64,22 @@ export function Providers({ children }: ProvidersProps) {
   );
 
   return (
-    <ThemeProvider
-      attribute="class"
-      defaultTheme="light"
-      enableSystem
-      disableTransitionOnChange
-    >
-      <QueryClientProvider client={queryClient}>
-        <AuthInitializer>
-          <WebSocketProvider>
-            {children}
-          </WebSocketProvider>
-        </AuthInitializer>
-        <ReactQueryDevtools initialIsOpen={false} />
-      </QueryClientProvider>
-    </ThemeProvider>
+    <BrandingThemeProvider>
+      <ThemeProvider
+        attribute="class"
+        defaultTheme="light"
+        enableSystem
+        disableTransitionOnChange
+      >
+        <QueryClientProvider client={queryClient}>
+          <AuthInitializer>
+            <WebSocketProvider>
+              {children}
+            </WebSocketProvider>
+          </AuthInitializer>
+          <ReactQueryDevtools initialIsOpen={false} />
+        </QueryClientProvider>
+      </ThemeProvider>
+    </BrandingThemeProvider>
   );
 }

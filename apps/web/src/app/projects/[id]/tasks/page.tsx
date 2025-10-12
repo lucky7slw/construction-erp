@@ -93,6 +93,22 @@ export default function TasksPage() {
     return { total, completed, inProgress, todo, overdue };
   }, [tasks]);
 
+  // Gantt chart data
+  const ganttData = React.useMemo(() => {
+    const tasksWithDates = filteredTasks.filter((t: any) => t.startDate && t.dueDate);
+    
+    if (tasksWithDates.length === 0) {
+      return null;
+    }
+
+    const dates = tasksWithDates.flatMap((t: any) => [new Date(t.startDate), new Date(t.dueDate)]);
+    const minDate = new Date(Math.min(...dates.map(d => d.getTime())));
+    const maxDate = new Date(Math.max(...dates.map(d => d.getTime())));
+    const totalDays = Math.ceil((maxDate.getTime() - minDate.getTime()) / (1000 * 60 * 60 * 24)) + 1;
+
+    return { tasksWithDates, minDate, maxDate, totalDays };
+  }, [filteredTasks]);
+
   const handleStatusChange = async (taskId: string, newStatus: TaskStatus) => {
     await updateTask.mutateAsync({
       id: taskId,
@@ -102,7 +118,12 @@ export default function TasksPage() {
 
   const handleCreateSubmit = async (data: any) => {
     try {
-      await createTask.mutateAsync({ projectId, ...data });
+      const payload = {
+        ...data,
+        startDate: data.startDate ? new Date(data.startDate).toISOString() : undefined,
+        dueDate: data.dueDate ? new Date(data.dueDate).toISOString() : undefined,
+      };
+      await createTask.mutateAsync({ projectId, ...payload });
       toast({
         title: 'Success',
         description: 'Task created successfully',
@@ -120,7 +141,14 @@ export default function TasksPage() {
   const handleUpdateSubmit = async (data: any) => {
     if (!selectedTask) return;
     try {
-      await updateTask.mutateAsync({ id: selectedTask.id, data });
+      console.log('Form data received:', data);
+      const payload = {
+        ...data,
+        startDate: data.startDate ? new Date(data.startDate).toISOString() : undefined,
+        dueDate: data.dueDate ? new Date(data.dueDate).toISOString() : undefined,
+      };
+      console.log('Payload being sent to API:', payload);
+      await updateTask.mutateAsync({ id: selectedTask.id, data: payload });
       toast({
         title: 'Success',
         description: 'Task updated successfully',
@@ -128,6 +156,7 @@ export default function TasksPage() {
       setEditDialogOpen(false);
       setSelectedTask(null);
     } catch (error: any) {
+      console.error('Update error:', error);
       toast({
         title: 'Error',
         description: error.message || 'Failed to update task',
@@ -445,7 +474,7 @@ export default function TasksPage() {
                           </div>
                         </div>
                         <div className="flex items-center gap-2">
-                          <Badge className={priorityConfig[task.priority as TaskPriority].color} variant="secondary" className="text-xs">
+                          <Badge variant="secondary" className={cn("text-xs", priorityConfig[task.priority as TaskPriority].color)}>
                             {priorityConfig[task.priority as TaskPriority].label}
                           </Badge>
                           {task.dueDate && (
@@ -471,11 +500,67 @@ export default function TasksPage() {
             <CardDescription>Timeline view of all tasks</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="text-center py-12 text-muted-foreground">
-              <GanttChart className="h-12 w-12 mx-auto mb-4 opacity-50" />
-              <p className="mb-2">Gantt chart visualization coming soon</p>
-              <p className="text-sm">This will show task dependencies and timeline</p>
-            </div>
+            {!ganttData ? (
+              <div className="text-center py-12 text-muted-foreground">
+                <GanttChart className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                <p className="mb-2">No tasks with dates to display</p>
+                <p className="text-sm">Add start and due dates to your tasks to see them on the Gantt chart</p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {/* Timeline info */}
+                <div className="text-sm text-muted-foreground">
+                  {ganttData.minDate.toLocaleDateString()} - {ganttData.maxDate.toLocaleDateString()} ({ganttData.totalDays} days)
+                </div>
+
+                {/* Timeline header */}
+                <div className="flex text-xs text-muted-foreground border-b pb-2">
+                  <div className="w-64">Task</div>
+                  <div className="flex-1 flex justify-between px-2">
+                    <span>{ganttData.minDate.toLocaleDateString()}</span>
+                    <span>{ganttData.maxDate.toLocaleDateString()}</span>
+                  </div>
+                </div>
+
+                {/* Tasks */}
+                {ganttData.tasksWithDates.map((task: any) => {
+                  const startDate = new Date(task.startDate);
+                  const endDate = new Date(task.dueDate);
+                  const duration = Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
+                  const width = Math.max((duration / ganttData.totalDays) * 100, 2);
+                  const offset = Math.ceil((startDate.getTime() - ganttData.minDate.getTime()) / (1000 * 60 * 60 * 24));
+                  const offsetPercent = (offset / ganttData.totalDays) * 100;
+                  const config = statusConfig[task.status as TaskStatus];
+
+                  return (
+                    <div key={task.id} className="flex items-center hover:bg-muted/50 p-2 rounded">
+                      <div className="w-64 pr-4">
+                        <p className="text-sm font-medium truncate">{task.title}</p>
+                        <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                          <Badge variant="secondary" className={cn("text-xs", priorityConfig[task.priority as TaskPriority].color)}>
+                            {priorityConfig[task.priority as TaskPriority].label}
+                          </Badge>
+                          <span>{config.label}</span>
+                        </div>
+                      </div>
+                      <div className="flex-1 relative h-10 bg-muted/30 rounded">
+                        <div
+                          className={cn(
+                            'absolute h-6 top-2 rounded cursor-pointer hover:opacity-80 transition-opacity',
+                            config.color.split(' ')[1]
+                          )}
+                          style={{
+                            left: `${offsetPercent}%`,
+                            width: `${width}%`,
+                          }}
+                          title={`${task.title}\n${formatDate(new Date(task.startDate))} - ${formatDate(new Date(task.dueDate))}\nStatus: ${config.label}`}
+                        />
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
           </CardContent>
         </Card>
       )}
@@ -504,25 +589,28 @@ export default function TasksPage() {
             <DialogDescription>Update task details</DialogDescription>
           </DialogHeader>
           {selectedTask && (
-            <TaskForm
-              projectId={projectId}
-              initialData={{
-                title: selectedTask.title,
-                description: selectedTask.description,
-                status: selectedTask.status,
-                priority: selectedTask.priority,
-                startDate: selectedTask.startDate,
-                dueDate: selectedTask.dueDate,
-                estimatedHours: selectedTask.estimatedHours,
-                assigneeId: selectedTask.assigneeId,
-              }}
-              onSubmit={handleUpdateSubmit}
-              onCancel={() => {
-                setEditDialogOpen(false);
-                setSelectedTask(null);
-              }}
-              isLoading={updateTask.isPending}
-            />
+            <>
+              {console.log('Selected task for editing:', selectedTask)}
+              <TaskForm
+                projectId={projectId}
+                initialData={{
+                  title: selectedTask.title,
+                  description: selectedTask.description,
+                  status: selectedTask.status,
+                  priority: selectedTask.priority,
+                  startDate: selectedTask.startDate,
+                  dueDate: selectedTask.dueDate,
+                  estimatedHours: selectedTask.estimatedHours,
+                  assigneeId: selectedTask.assigneeId,
+                }}
+                onSubmit={handleUpdateSubmit}
+                onCancel={() => {
+                  setEditDialogOpen(false);
+                  setSelectedTask(null);
+                }}
+                isLoading={updateTask.isPending}
+              />
+            </>
           )}
         </DialogContent>
       </Dialog>

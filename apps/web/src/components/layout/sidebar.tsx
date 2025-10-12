@@ -17,6 +17,10 @@ import {
   X,
   Folder,
   UserPlus,
+  Sparkles,
+  Hammer,
+  Shield,
+  Plug,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -74,9 +78,25 @@ const navItems: NavItem[] = [
     icon: BarChart3,
   },
   {
+    title: 'AI Insights',
+    href: '/ai-insights',
+    icon: Sparkles,
+  },
+  {
+    title: 'Deck Builder',
+    href: '/deck-builder',
+    icon: Hammer,
+  },
+  {
     title: 'Documents',
     href: '/documents',
     icon: Folder,
+  },
+  {
+    title: 'Admin',
+    href: '/settings/admin',
+    icon: Shield,
+    roles: ['super_admin'],
   },
   {
     title: 'Settings',
@@ -95,6 +115,8 @@ interface SidebarProps {
 export function Sidebar({ open, collapsed, onCollapse, onClose }: SidebarProps) {
   const pathname = usePathname();
   const { user } = useAuth();
+  const [isHovered, setIsHovered] = React.useState(false);
+  const isExpanded = !collapsed || isHovered;
 
   // Filter nav items based on user roles
   const filteredNavItems = navItems.filter((item) => {
@@ -110,39 +132,55 @@ export function Sidebar({ open, collapsed, onCollapse, onClose }: SidebarProps) 
       {/* Desktop Sidebar */}
       <div
         className={cn(
-          'fixed inset-y-0 left-0 z-50 hidden lg:flex',
-          collapsed ? 'w-16' : 'w-64'
+          'fixed inset-y-0 left-0 z-50 hidden lg:flex transition-all duration-300',
+          isExpanded ? 'w-64' : 'w-16'
         )}
+        onMouseEnter={() => setIsHovered(true)}
+        onMouseLeave={() => setIsHovered(false)}
       >
         <div className="flex min-h-0 flex-1 flex-col border-r bg-card">
           {/* Logo and collapse button */}
           <div className={cn(
-            'flex items-center justify-between border-b px-4',
-            collapsed ? 'h-16 px-3' : 'h-16 px-4'
+            'flex items-center justify-between border-b px-4 h-16',
+            !isExpanded && 'px-3'
           )}>
-            {!collapsed && (
+            {isExpanded ? (
               <div className="flex items-center space-x-2">
-                <Building2 className="h-8 w-8 text-construction-500" />
+                {(user?.companies?.[0] as any)?.logo ? (
+                  <img 
+                    src={(user?.companies?.[0] as any)?.logo} 
+                    alt={user?.companies?.[0]?.name || 'Company Logo'}
+                    className="h-8 w-auto object-contain"
+                  />
+                ) : (
+                  <Building2 className="h-8 w-8 text-construction-500" />
+                )}
                 <span className="text-xl font-bold text-foreground">
-                  HHHomes
+                  {user?.companies?.[0]?.name || 'HHHomes'}
                 </span>
               </div>
+            ) : (
+              (user?.companies?.[0] as any)?.logo ? (
+                <img 
+                  src={(user?.companies?.[0] as any)?.logo} 
+                  alt={user?.companies?.[0]?.name || 'Logo'}
+                  className="h-8 w-auto object-contain mx-auto"
+                />
+              ) : (
+                <Building2 className="h-8 w-8 text-construction-500 mx-auto" />
+              )
             )}
-            {collapsed && (
-              <Building2 className="h-8 w-8 text-construction-500 mx-auto" />
+            {isExpanded && (
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => onCollapse(!collapsed)}
+                className="h-8 w-8"
+              >
+                <ChevronLeft className="h-4 w-4" />
+                <span className="sr-only">Collapse sidebar</span>
+              </Button>
             )}
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => onCollapse(!collapsed)}
-              className={cn(
-                'h-8 w-8',
-                collapsed && 'hidden'
-              )}
-            >
-              <ChevronLeft className="h-4 w-4" />
-              <span className="sr-only">Collapse sidebar</span>
-            </Button>
           </div>
 
           {/* Navigation */}
@@ -161,17 +199,17 @@ export function Sidebar({ open, collapsed, onCollapse, onClose }: SidebarProps) 
                       ? 'bg-construction-100 text-construction-900 dark:bg-construction-900 dark:text-construction-100'
                       : 'text-muted-foreground hover:bg-accent hover:text-accent-foreground',
                     item.disabled && 'pointer-events-none opacity-50',
-                    collapsed && 'justify-center px-3'
+                    !isExpanded && 'justify-center px-3'
                   )}
                 >
                   <Icon
                     className={cn(
                       'h-5 w-5 shrink-0',
                       isActive && 'text-construction-600 dark:text-construction-400',
-                      !collapsed && 'mr-3'
+                      isExpanded && 'mr-3'
                     )}
                   />
-                  {!collapsed && (
+                  {isExpanded && (
                     <>
                       <span className="truncate">{item.title}</span>
                       {item.badge && (
@@ -186,9 +224,9 @@ export function Sidebar({ open, collapsed, onCollapse, onClose }: SidebarProps) 
             })}
           </nav>
 
-          {/* Expand button when collapsed */}
-          {collapsed && (
-            <div className="border-t p-2">
+          {/* Expand button when collapsed - sticky at bottom */}
+          {!isExpanded && (
+            <div className="sticky bottom-0 border-t p-2 bg-card">
               <Button
                 variant="ghost"
                 size="icon"
@@ -214,9 +252,17 @@ export function Sidebar({ open, collapsed, onCollapse, onClose }: SidebarProps) 
           {/* Logo and close button */}
           <div className="flex items-center justify-between border-b px-4 h-16">
             <div className="flex items-center space-x-2">
-              <Building2 className="h-8 w-8 text-construction-500" />
+              {(user?.companies?.[0] as any)?.logo ? (
+                <img 
+                  src={(user?.companies?.[0] as any)?.logo} 
+                  alt={user?.companies?.[0]?.name || 'Company Logo'}
+                  className="h-8 w-auto object-contain"
+                />
+              ) : (
+                <Building2 className="h-8 w-8 text-construction-500" />
+              )}
               <span className="text-xl font-bold text-foreground">
-                HHHomes
+                {user?.companies?.[0]?.name || 'HHHomes'}
               </span>
             </div>
             <Button

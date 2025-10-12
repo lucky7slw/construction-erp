@@ -46,6 +46,7 @@ export const tasksRoutes: FastifyPluginAsync<TasksRoutesOptions> = async (
                   description: { type: 'string', nullable: true },
                   status: { type: 'string' },
                   priority: { type: 'string' },
+                  startDate: { type: 'string', nullable: true },
                   dueDate: { type: 'string', nullable: true },
                   completedAt: { type: 'string', nullable: true },
                   projectId: { type: 'string' },
@@ -236,6 +237,8 @@ export const tasksRoutes: FastifyPluginAsync<TasksRoutesOptions> = async (
       description?: string;
       status?: string;
       priority?: string;
+
+      startDate?: string;
       dueDate?: string;
       projectId: string;
       assigneeId?: string;
@@ -254,6 +257,8 @@ export const tasksRoutes: FastifyPluginAsync<TasksRoutesOptions> = async (
           description: { type: 'string' },
           status: { type: 'string', enum: ['TODO', 'IN_PROGRESS', 'COMPLETED', 'CANCELLED'] },
           priority: { type: 'string', enum: ['LOW', 'MEDIUM', 'HIGH', 'URGENT'] },
+
+          startDate: { type: 'string', format: 'date-time' },
           dueDate: { type: 'string', format: 'date-time' },
           projectId: { type: 'string' },
           assigneeId: { type: 'string' },
@@ -292,7 +297,6 @@ export const tasksRoutes: FastifyPluginAsync<TasksRoutesOptions> = async (
             users: {
               some: {
                 userId: request.user.id,
-                role: { in: ['manager', 'member'] },
               },
             },
           },
@@ -309,10 +313,12 @@ export const tasksRoutes: FastifyPluginAsync<TasksRoutesOptions> = async (
         title: request.body.title,
         description: request.body.description,
         status: (request.body.status as any) || 'TODO',
+
+        startDate: request.body.startDate ? new Date(request.body.startDate) : undefined,
         priority: (request.body.priority as any) || 'MEDIUM',
         dueDate: request.body.dueDate ? new Date(request.body.dueDate) : undefined,
         projectId: request.body.projectId,
-        assigneeId: request.body.assigneeId,
+        assigneeId: request.body.assigneeId || undefined,
         estimatedHours: request.body.estimatedHours,
       },
       include: {
@@ -342,6 +348,7 @@ export const tasksRoutes: FastifyPluginAsync<TasksRoutesOptions> = async (
       description?: string;
       status?: string;
       priority?: string;
+      startDate?: string;
       dueDate?: string;
       assigneeId?: string;
       estimatedHours?: number;
@@ -366,6 +373,7 @@ export const tasksRoutes: FastifyPluginAsync<TasksRoutesOptions> = async (
           description: { type: 'string' },
           status: { type: 'string', enum: ['TODO', 'IN_PROGRESS', 'COMPLETED', 'CANCELLED'] },
           priority: { type: 'string', enum: ['LOW', 'MEDIUM', 'HIGH', 'URGENT'] },
+          startDate: { type: 'string', format: 'date-time' },
           dueDate: { type: 'string', format: 'date-time' },
           assigneeId: { type: 'string' },
           estimatedHours: { type: 'number' },
@@ -422,16 +430,24 @@ export const tasksRoutes: FastifyPluginAsync<TasksRoutesOptions> = async (
 
     const updateData: any = {};
 
+    console.log('[PATCH /tasks/:id] Request body:', request.body);
+
     if (request.body.title) updateData.title = request.body.title;
     if (request.body.description !== undefined) updateData.description = request.body.description;
     if (request.body.status) updateData.status = request.body.status as any;
     if (request.body.priority) updateData.priority = request.body.priority as any;
+    if (request.body.startDate !== undefined) {
+      console.log('[PATCH /tasks/:id] Processing startDate:', request.body.startDate);
+      updateData.startDate = request.body.startDate ? new Date(request.body.startDate) : null;
+    }
     if (request.body.dueDate !== undefined) {
       updateData.dueDate = request.body.dueDate ? new Date(request.body.dueDate) : null;
     }
-    if (request.body.assigneeId !== undefined) updateData.assigneeId = request.body.assigneeId;
+    if (request.body.assigneeId !== undefined) updateData.assigneeId = request.body.assigneeId || null;
     if (request.body.estimatedHours !== undefined) updateData.estimatedHours = request.body.estimatedHours;
     if (request.body.actualHours !== undefined) updateData.actualHours = request.body.actualHours;
+
+    console.log('[PATCH /tasks/:id] Update data to be saved:', updateData);
 
     // Auto-set completedAt when status changes to COMPLETED
     if (request.body.status === 'COMPLETED' && existingTask.status !== 'COMPLETED') {

@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Update Manager</title>
+    <style>
+        body { font-family: Arial; max-width: 600px; margin: 50px auto; padding: 20px; }
+        button { padding: 15px 30px; font-size: 16px; cursor: pointer; margin: 10px; }
+        #status { margin-top: 20px; padding: 15px; background: #f0f0f0; border-radius: 5px; white-space: pre-wrap; }
+        .success { background: #d4edda; }
+        .error { background: #f8d7da; }
+    </style>
+</head>
+<body>
+    <h1>Update Manager</h1>
+    
+    <button onclick="checkUpdate()">Check for Updates</button>
+    <button onclick="triggerUpdate()">Install Update Now</button>
+    
+    <div id="status"></div>
+
+    <script>
+        function checkUpdate() {
+            document.getElementById('status').innerHTML = 'Checking...';
+            fetch('/api/check-update')
+                .then(r => r.json())
+                .then(data => {
+                    const status = document.getElementById('status');
+                    status.innerHTML = data.output;
+                    status.className = data.success ? 'success' : 'error';
+                });
+        }
+
+        function triggerUpdate() {
+            if (!confirm('This will restart the service. Continue?')) return;
+            document.getElementById('status').innerHTML = 'Update started...';
+            fetch('/api/trigger-update', { method: 'POST' })
+                .then(r => r.json())
+                .then(data => {
+                    document.getElementById('status').innerHTML = data.message;
+                });
+        }
+    </script>
+</body>
+</html>

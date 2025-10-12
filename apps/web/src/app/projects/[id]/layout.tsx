@@ -70,6 +70,8 @@ const navigationSections: NavSection[] = [
     items: [
       { title: 'Files & Photos', href: '/files', icon: Folder },
       { title: 'Schedule', href: '/schedule', icon: CalendarDays },
+
+      { title: 'Gantt Chart', href: '/gantt', icon: GitBranch },
       { title: 'Tasks & Checklist', href: '/tasks', icon: ListChecks },
       { title: 'Team', href: '/team', icon: Users },
       { title: 'RFIs', href: '/rfis', icon: MessageSquare },

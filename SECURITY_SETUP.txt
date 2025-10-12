@@ -1,0 +1,48 @@
+SECURITY HARDENING SETUP
+========================
+
+STEP 1: GENERATE API KEY
+-------------------------
+Run this to generate a random API key:
+  openssl rand -hex 32
+
+Copy the output and use it in both:
+  - update_server.py (API_KEY variable)
+  - auto_updater.py (API_KEY variable)
+
+
+STEP 2: SETUP SSH TUNNEL (RECOMMENDED)
+---------------------------------------
+Instead of exposing port 8080, use SSH tunnel:
+
+On MacBook:
+  - Server now binds to 127.0.0.1 (localhost only)
+  - Not accessible from network directly
+
+On Client:
+  1. Setup SSH key authentication to MacBook
+  2. Edit setup_secure_tunnel.sh with MacBook IP and username
+  3. Run: bash setup_secure_tunnel.sh
+  4. In auto_updater.py, use: UPDATE_SERVER = "http://localhost:8080/version"
+
+
+STEP 3: FIREWALL (IF NOT USING SSH TUNNEL)
+-------------------------------------------
+If you must expose port 8080:
+  sudo ufw allow from CLIENT_IP to any port 8080
+  sudo ufw enable
+
+
+WHAT'S PROTECTED:
+-----------------
+✓ API key authentication (prevents unauthorized access)
+✓ HMAC signature verification (prevents tampering)
+✓ Localhost-only binding (no network exposure)
+✓ SSH tunnel option (encrypted connection)
+
+
+IMPORTANT:
+----------
+- Keep API_KEY secret
+- Use same API_KEY on server and client
+- Never commit API_KEY to git

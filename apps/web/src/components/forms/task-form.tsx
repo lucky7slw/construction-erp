@@ -52,6 +52,18 @@ const priorityOptions = [
   { value: 'URGENT', label: 'Urgent' },
 ];
 
+// Helper function to convert ISO date string to YYYY-MM-DD format
+const formatDateForInput = (dateString?: string): string => {
+  if (!dateString) return '';
+  try {
+    const date = new Date(dateString);
+    if (isNaN(date.getTime())) return '';
+    return date.toISOString().split('T')[0];
+  } catch {
+    return '';
+  }
+};
+
 export function TaskForm({
   projectId,
   initialData,
@@ -72,8 +84,8 @@ export function TaskForm({
       description: initialData?.description || '',
       status: initialData?.status || 'TODO',
       priority: initialData?.priority || 'MEDIUM',
-      startDate: initialData?.startDate || '',
-      dueDate: initialData?.dueDate || '',
+      startDate: formatDateForInput(initialData?.startDate),
+      dueDate: formatDateForInput(initialData?.dueDate),
       estimatedHours: initialData?.estimatedHours || undefined,
       assigneeId: initialData?.assigneeId || '',
     },

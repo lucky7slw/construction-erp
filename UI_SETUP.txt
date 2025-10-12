@@ -1,0 +1,33 @@
+UPDATE UI SETUP
+===============
+
+INSTALL FLASK:
+--------------
+pip3 install flask
+
+
+RUN THE UI:
+-----------
+python3 update_api.py
+
+
+ACCESS THE UI:
+--------------
+Open browser: http://localhost:5000
+
+Or from another computer: http://your-server-ip:5000
+
+
+BUTTONS:
+--------
+- "Check for Updates" - Shows if update is available (doesn't install)
+- "Install Update Now" - Downloads and installs update, restarts service
+
+
+NOTE:
+-----
+If you want to integrate this into your existing website,
+just use the API endpoints:
+
+  GET  /api/check-update    - Check for updates
+  POST /api/trigger-update  - Install update now

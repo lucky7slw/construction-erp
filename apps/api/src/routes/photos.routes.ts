@@ -1,206 +1,63 @@
-import type { FastifyPluginAsync } from 'fastify';
+import type { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
 import type { PrismaClient } from '../generated/prisma';
+import { fileStorage } from '../lib/file-storage';
+import sharp from 'sharp';
 
-type PhotosRoutesOptions = {
+interface PhotoRoutesOptions {
   prisma: PrismaClient;
-};
+}
 
-export const photosRoutes: FastifyPluginAsync<PhotosRoutesOptions> = async (
-  fastify,
-  options
-) => {
+export default async function photosRoutes(fastify: FastifyInstance, options: PhotoRoutesOptions) {
   const { prisma } = options;
 
-  // GET /api/v1/photos - List photos for a project
-  fastify.get<{
-    Querystring: {
-      projectId: string;
-      tag?: string;
-    };
-  }>('/', {
-    schema: {
-      security: [{ bearerAuth: [] }],
-      tags: ['Photos'],
-      summary: 'List project photos',
-      querystring: {
-        type: 'object',
-        required: ['projectId'],
-        properties: {
-          projectId: { type: 'string' },
-          tag: { type: 'string' },
-        },
-      },
-    },
-  }, async (request, reply) => {
-    if (!request.user) {
-      return reply.code(401).send({ error: 'Authentication required' });
-    }
-
-    // Verify project access
-    const project = await prisma.project.findFirst({
-      where: {
-        id: request.query.projectId,
-        OR: [
-          { createdById: request.user.id },
-          { users: { some: { userId: request.user.id } } },
-        ],
-      },
-    });
-
-    if (!project) {
-      return reply.code(404).send({ error: 'Project not found' });
-    }
-
-    const where: any = {
-      projectId: request.query.projectId,
-      category: 'PHOTO',
-    };
-
-    if (request.query.tag) {
-      where.tags = {
-        has: request.query.tag,
-      };
-    }
-
-    const photos = await prisma.projectFile.findMany({
-      where,
-      include: {
-        uploader: {
-          select: {
-            id: true,
-            firstName: true,
-            lastName: true,
-          },
-        },
-      },
-      orderBy: {
-        takenAt: 'desc',
-      },
-    });
-
-    return reply.send({ photos });
-  });
-
-  // GET /api/v1/photos/:id - Get single photo
-  fastify.get<{
-    Params: {
-      id: string;
-    };
-  }>('/:id', {
-    schema: {
-      security: [{ bearerAuth: [] }],
-      tags: ['Photos'],
-      summary: 'Get photo',
-    },
-  }, async (request, reply) => {
-    if (!request.user) {
-      return reply.code(401).send({ error: 'Authentication required' });
-    }
-
-    const photo = await prisma.projectFile.findUnique({
-      where: {
-        id: request.params.id,
-      },
-      include: {
-        uploader: {
-          select: {
-            id: true,
-            firstName: true,
-            lastName: true,
-          },
-        },
-      },
-    });
-
-    if (!photo || photo.category !== 'PHOTO') {
-      return reply.code(404).send({ error: 'Photo not found' });
-    }
-
-    // Verify project access
-    const project = await prisma.project.findFirst({
-      where: {
-        id: photo.projectId,
-        OR: [
-          { createdById: request.user.id },
-          { users: { some: { userId: request.user.id } } },
-        ],
-      },
-    });
-
-    if (!project) {
-      return reply.code(404).send({ error: 'Project not found' });
-    }
-
-    return reply.send({ photo });
-  });
-
-  // POST /api/v1/photos - Upload photo
+  // Upload photo
   fastify.post<{
-    Body: {
-      projectId: string;
-      filename: string;
-      fileUrl: string;
-      mimeType: string;
-      size: number;
-      tags?: string[];
-      location?: string;
-      description?: string;
-      takenAt?: string;
-    };
-  }>('/', {
-    schema: {
-      security: [{ bearerAuth: [] }],
-      tags: ['Photos'],
-      summary: 'Upload photo',
-      body: {
-        type: 'object',
-        required: ['projectId', 'filename', 'fileUrl', 'mimeType', 'size'],
-        properties: {
-          projectId: { type: 'string' },
-          filename: { type: 'string' },
-          fileUrl: { type: 'string' },
-          mimeType: { type: 'string' },
-          size: { type: 'number' },
-          tags: { type: 'array', items: { type: 'string' } },
-          location: { type: 'string' },
-          description: { type: 'string' },
-          takenAt: { type: 'string', format: 'date-time' },
-        },
-      },
-    },
-  }, async (request, reply) => {
-    if (!request.user) {
-      return reply.code(401).send({ error: 'Authentication required' });
+    Params: { projectId: string };
+  }>('/projects/:projectId/photos', async (request, reply) => {
+    const { projectId } = request.params;
+    const userId = (request as any).user?.userId;
+    const data = await request.file();
+
+    if (!data) {
+      return reply.code(400).send({ error: 'No file uploaded' });
     }
 
-    // Verify project access
-    const project = await prisma.project.findFirst({
-      where: {
-        id: request.body.projectId,
-        OR: [
-          { createdById: request.user.id },
-          { users: { some: { userId: request.user.id } } },
-        ],
-      },
-    });
+    const buffer = await data.toBuffer();
+    
+    // Extract EXIF data
+    const metadata = await sharp(buffer).metadata();
+    
+    // Upload to storage
+    const filename = `${Date.now()}-${data.filename}`;
+    const fileUrl = await fileStorage.uploadFile(buffer, `photos/${projectId}/${filename}`);
 
-    if (!project) {
-      return reply.code(404).send({ error: 'Project not found' });
-    }
-
+    // Create photo record
     const photo = await prisma.projectFile.create({
       data: {
-        projectId: request.body.projectId,
+        projectId,
         category: 'PHOTO',
-        filename: request.body.filename,
-        fileUrl: request.body.fileUrl,
-        mimeType: request.body.mimeType,
-        size: request.body.size,
-        tags: request.body.tags || [],
-        location: request.body.location,
-        description: request.body.description,
-        takenAt: request.body.takenAt ? new Date(request.body.takenAt) : new Date(),
-        uploadedBy: request.user.id,
+        filename: data.filename,
+        fileUrl,
+        mimeType: data.mimetype,
+        size: buffer.length,
+        uploadedBy: userId,
+        takenAt: new Date(),
+      },
+    });
+
+    return reply.send(photo);
+  });
+
+  // Get project photos
+  fastify.get<{
+    Params: { projectId: string };
+  }>('/projects/:projectId/photos', async (request, reply) => {
+    const { projectId } = request.params;
+
+    const photos = await prisma.projectFile.findMany({
+      where: {
+        projectId,
+        category: 'PHOTO',
       },
       include: {
         uploader: {
@@ -210,70 +67,63 @@ export const photosRoutes: FastifyPluginAsync<PhotosRoutesOptions> = async (
             lastName: true,
           },
         },
+        annotations: true,
+        comments: {
+          include: {
+            creator: {
+              select: {
+                id: true,
+                firstName: true,
+                lastName: true,
+              },
+            },
+          },
+        },
       },
+      orderBy: { createdAt: 'desc' },
     });
 
-    return reply.code(201).send({ photo });
+    return reply.send(photos);
   });
 
-  // PATCH /api/v1/photos/:id - Update photo metadata
-  fastify.patch<{
-    Params: {
-      id: string;
-    };
-    Body: {
-      description?: string;
-      tags?: string[];
-      location?: string;
-    };
-  }>('/:id', {
-    schema: {
-      security: [{ bearerAuth: [] }],
-      tags: ['Photos'],
-      summary: 'Update photo metadata',
-    },
-  }, async (request, reply) => {
-    if (!request.user) {
-      return reply.code(401).send({ error: 'Authentication required' });
-    }
+  // Add annotation
+  fastify.post<{
+    Params: { photoId: string };
+    Body: { type: string; data: any };
+  }>('/photos/:photoId/annotations', async (request, reply) => {
+    const { photoId } = request.params;
+    const { type, data } = request.body;
+    const userId = (request as any).user?.userId;
 
-    const existing = await prisma.projectFile.findUnique({
-      where: {
-        id: request.params.id,
+    const annotation = await prisma.photoAnnotation.create({
+      data: {
+        fileId: photoId,
+        type,
+        data,
+        createdBy: userId,
       },
     });
 
-    if (!existing || existing.category !== 'PHOTO') {
-      return reply.code(404).send({ error: 'Photo not found' });
-    }
+    return reply.send(annotation);
+  });
 
-    // Verify project access
-    const project = await prisma.project.findFirst({
-      where: {
-        id: existing.projectId,
-        OR: [
-          { createdById: request.user.id },
-          { users: { some: { userId: request.user.id } } },
-        ],
+  // Add comment
+  fastify.post<{
+    Params: { photoId: string };
+    Body: { content: string };
+  }>('/photos/:photoId/comments', async (request, reply) => {
+    const { photoId } = request.params;
+    const { content } = request.body;
+    const userId = (request as any).user?.userId;
+
+    const comment = await prisma.photoComment.create({
+      data: {
+        fileId: photoId,
+        content,
+        createdBy: userId,
       },
-    });
-
-    if (!project) {
-      return reply.code(404).send({ error: 'Project not found' });
-    }
-
-    const updateData: any = {};
-    if (request.body.description !== undefined) updateData.description = request.body.description;
-    if (request.body.tags !== undefined) updateData.tags = request.body.tags;
-    if (request.body.location !== undefined) updateData.location = request.body.location;
-
-    const photo = await prisma.projectFile.update({
-      where: {
-        id: request.params.id,
-      },
-      data: updateData,
       include: {
-        uploader: {
+        creator: {
           select: {
             id: true,
             firstName: true,
@@ -283,56 +133,44 @@ export const photosRoutes: FastifyPluginAsync<PhotosRoutesOptions> = async (
       },
     });
 
-    return reply.send({ photo });
+    return reply.send(comment);
   });
 
-  // DELETE /api/v1/photos/:id - Delete photo
-  fastify.delete<{
-    Params: {
-      id: string;
-    };
-  }>('/:id', {
-    schema: {
-      security: [{ bearerAuth: [] }],
-      tags: ['Photos'],
-      summary: 'Delete photo',
-    },
-  }, async (request, reply) => {
-    if (!request.user) {
-      return reply.code(401).send({ error: 'Authentication required' });
-    }
+  // Search photos
+  fastify.get('/photos/search', async (request, reply) => {
+    const { q, projectId } = request.query as { q?: string; projectId?: string };
 
-    const existing = await prisma.projectFile.findUnique({
+    const photos = await prisma.projectFile.findMany({
       where: {
-        id: request.params.id,
+        category: 'PHOTO',
+        ...(projectId && { projectId }),
+        ...(q && {
+          OR: [
+            { filename: { contains: q, mode: 'insensitive' } },
+            { description: { contains: q, mode: 'insensitive' } },
+            { tags: { has: q } },
+          ],
+        }),
       },
+      include: {
+        project: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+        uploader: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+          },
+        },
+      },
+      orderBy: { createdAt: 'desc' },
+      take: 50,
     });
 
-    if (!existing || existing.category !== 'PHOTO') {
-      return reply.code(404).send({ error: 'Photo not found' });
-    }
-
-    // Verify project access
-    const project = await prisma.project.findFirst({
-      where: {
-        id: existing.projectId,
-        OR: [
-          { createdById: request.user.id },
-          { users: { some: { userId: request.user.id } } },
-        ],
-      },
-    });
-
-    if (!project) {
-      return reply.code(404).send({ error: 'Project not found' });
-    }
-
-    await prisma.projectFile.delete({
-      where: {
-        id: request.params.id,
-      },
-    });
-
-    return reply.code(204).send();
+    return reply.send(photos);
   });
-};
+}

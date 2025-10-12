@@ -1,0 +1,70 @@
+/* Brand color utilities - these use CSS variables set by the ThemeProvider */
+
+.bg-brand-primary {
+  background-color: var(--brand-primary);
+}
+
+.bg-brand-secondary {
+  background-color: var(--brand-secondary);
+}
+
+.bg-brand-accent {
+  background-color: var(--brand-accent);
+}
+
+.text-brand-primary {
+  color: var(--brand-primary);
+}
+
+.text-brand-secondary {
+  color: var(--brand-secondary);
+}
+
+.text-brand-accent {
+  color: var(--brand-accent);
+}
+
+.border-brand-primary {
+  border-color: var(--brand-primary);
+}
+
+.border-brand-secondary {
+  border-color: var(--brand-secondary);
+}
+
+.border-brand-accent {
+  border-color: var(--brand-accent);
+}
+
+.font-brand-heading {
+  font-family: var(--brand-heading-font);
+}
+
+.font-brand-body {
+  font-family: var(--brand-body-font);
+}
+
+/* Hover states */
+.hover\:bg-brand-primary:hover {
+  background-color: var(--brand-primary);
+}
+
+.hover\:bg-brand-secondary:hover {
+  background-color: var(--brand-secondary);
+}
+
+.hover\:bg-brand-accent:hover {
+  background-color: var(--brand-accent);
+}
+
+.hover\:text-brand-primary:hover {
+  color: var(--brand-primary);
+}
+
+.hover\:text-brand-secondary:hover {
+  color: var(--brand-secondary);
+}
+
+.hover\:text-brand-accent:hover {
+  color: var(--brand-accent);
+}

@@ -206,8 +206,6 @@ onRehydrateStorage: () => (state) => {
           apiClient.setAccessToken(state.accessToken);
           apiClient.setRefreshToken(state.refreshToken);
 
-          // Then validate the token
-          state.refreshAuth();
         }
       },
     }

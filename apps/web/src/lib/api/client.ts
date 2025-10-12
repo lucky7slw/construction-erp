@@ -379,6 +379,19 @@ class ApiClient {
     }
   }
 
+  async get<T = any>(endpoint: string): Promise<{ data: T }> {
+    const result = await this.request<T>(endpoint);
+    return { data: result };
+  }
+
+  async post<T = any>(endpoint: string, data?: any): Promise<{ data: T }> {
+    const result = await this.request<T>(endpoint, {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+    return { data: result };
+  }
+
   async getProfile(): Promise<{ user: User }> {
     return this.request<{ user: User }>('/me');
   }
