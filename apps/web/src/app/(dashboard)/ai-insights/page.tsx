@@ -144,7 +144,7 @@ export default function AIInsightsPage() {
                     <Skeleton className="h-20" />
                   </>
                 ) : (
-                  projects?.map((project) => (
+                  projects?.map((project: any) => (
                     <Button
                       key={project.id}
                       variant={selectedProjectId === project.id ? 'default' : 'outline'}
