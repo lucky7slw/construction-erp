@@ -8,5 +8,7 @@ export default defineConfig({
   minify: false,
   sourcemap: true,
   target: 'es2022',
-  outDir: 'dist'
+  outDir: 'dist',
+  external: ['sharp'], // Mark sharp as external (native module)
+  noExternal: []
 });
