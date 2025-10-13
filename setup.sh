@@ -39,12 +39,19 @@ if ! command -v docker &> /dev/null; then
     exit 1
 fi
 
-if ! command -v docker-compose &> /dev/null; then
+# Check for Docker Compose (v2 plugin or v1 standalone)
+COMPOSE_CMD=""
+if docker compose version &> /dev/null; then
+    COMPOSE_CMD="docker compose"
+    print_success "Docker Compose v2 (plugin) is installed"
+elif command -v docker-compose &> /dev/null; then
+    COMPOSE_CMD="docker-compose"
+    print_success "Docker Compose v1 is installed"
+else
     print_error "Docker Compose is not installed. Please install Docker Compose first."
+    print_info "Run: sudo apt install docker-compose-plugin -y"
     exit 1
 fi
-
-print_success "Docker and Docker Compose are installed"
 
 # Get domain name
 echo ""
@@ -133,7 +140,7 @@ print_success "Directories created"
 
 # Build and start containers (without SSL first)
 print_info "Building Docker containers (this may take 5-10 minutes)..."
-docker-compose build
+$COMPOSE_CMD build
 
 print_success "Containers built successfully"
 
@@ -179,19 +186,19 @@ server {
 EOF
 
 # Start services
-docker-compose up -d postgres
+$COMPOSE_CMD up -d postgres
 sleep 10  # Wait for postgres to be ready
 
 print_success "Database started"
 
 # Run database migrations
 print_info "Running database migrations..."
-docker-compose run --rm api sh -c "cd apps/api && npx prisma migrate deploy && npx prisma generate"
+$COMPOSE_CMD run --rm api sh -c "cd apps/api && npx prisma migrate deploy && npx prisma generate"
 
 print_success "Database migrations completed"
 
 # Start all services
-docker-compose up -d
+$COMPOSE_CMD up -d
 
 print_success "All services started"
 
@@ -201,7 +208,7 @@ sleep 15
 
 # Get SSL certificates
 print_info "Obtaining SSL certificates..."
-docker-compose run --rm certbot certonly --webroot \
+$COMPOSE_CMD run --rm certbot certonly --webroot \
     --webroot-path=/var/www/certbot \
     --email $EMAIL \
     --agree-tos \
@@ -216,12 +223,12 @@ if [ $? -eq 0 ]; then
     mv nginx/conf.d/default.conf.ssl nginx/conf.d/default.conf
     
     # Reload nginx
-    docker-compose restart nginx
+    $COMPOSE_CMD restart nginx
     
     print_success "Nginx restarted with SSL"
 else
     print_warning "SSL certificate generation failed. You can run this later:"
-    print_warning "docker-compose run --rm certbot certonly --webroot -w /var/www/certbot -d api.$DOMAIN -d app.$DOMAIN"
+    print_warning "$COMPOSE_CMD run --rm certbot certonly --webroot -w /var/www/certbot -d api.$DOMAIN -d app.$DOMAIN"
 fi
 
 echo ""
@@ -234,11 +241,11 @@ echo "  Web App: https://app.$DOMAIN"
 echo "  API: https://api.$DOMAIN"
 echo ""
 print_info "Useful commands:"
-echo "  View logs:        docker-compose logs -f"
-echo "  Stop services:    docker-compose down"
-echo "  Start services:   docker-compose up -d"
-echo "  Restart services: docker-compose restart"
-echo "  View status:      docker-compose ps"
+echo "  View logs:        $COMPOSE_CMD logs -f"
+echo "  Stop services:    $COMPOSE_CMD down"
+echo "  Start services:   $COMPOSE_CMD up -d"
+echo "  Restart services: $COMPOSE_CMD restart"
+echo "  View status:      $COMPOSE_CMD ps"
 echo ""
 print_warning "Important: Make sure your DNS records point to this server!"
 print_warning "Add A records for api.$DOMAIN and app.$DOMAIN to your server's IP"
