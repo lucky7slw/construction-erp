@@ -6,20 +6,11 @@ WORKDIR /app
 # Install pnpm
 RUN corepack enable
 
-# Copy root package files
-COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
-COPY turbo.json ./
-
-# Copy all package.json files
-COPY apps/web/package.json ./apps/web/
-COPY packages/*/package.json ./packages/*/
-COPY tools/*/package.json ./tools/*/
+# Copy everything (needed for workspace dependencies)
+COPY . .
 
 # Install dependencies
 RUN pnpm install
-
-# Copy source code
-COPY . .
 
 # Build the application
 ENV NEXT_TELEMETRY_DISABLED=1
