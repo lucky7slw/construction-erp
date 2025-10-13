@@ -49,8 +49,8 @@ RUN pnpm install --frozen-lockfile --production
 COPY --from=builder --chown=erp:erp /app/apps/api/dist ./apps/api/dist
 COPY --from=builder --chown=erp:erp /app/packages/*/dist ./packages/
 
-# Copy necessary files
-COPY --chown=erp:erp apps/api/.env.example ./apps/api/.env
+# Copy Prisma schema and migrations
+COPY --from=builder --chown=erp:erp /app/apps/api/prisma ./apps/api/prisma
 
 # Set environment variables
 ENV NODE_ENV=production
