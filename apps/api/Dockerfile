@@ -27,11 +27,8 @@ RUN corepack enable
 RUN addgroup --system --gid 1001 erp && \
     adduser --system --uid 1001 erp
 
-# Copy package files for production dependencies
-COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
-COPY apps/api/package.json ./apps/api/
-COPY packages/*/package.json ./packages/*/
-COPY tools/*/package.json ./tools/*/
+# Copy everything for workspace resolution
+COPY . .
 
 # Install production dependencies only
 RUN pnpm install --production

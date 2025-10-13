@@ -33,11 +33,8 @@ ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV PORT=3000
 
-# Copy package files for production dependencies
-COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
-COPY apps/web/package.json ./apps/web/
-COPY packages/*/package.json ./packages/*/
-COPY tools/*/package.json ./tools/*/
+# Copy everything for workspace resolution
+COPY . .
 
 # Install production dependencies only
 RUN pnpm install --production
