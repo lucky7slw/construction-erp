@@ -12,6 +12,9 @@ COPY . .
 # Install dependencies
 RUN pnpm install
 
+# Generate Prisma Client
+RUN cd apps/api && npx prisma generate
+
 # Build the application
 RUN pnpm build --filter @hhhomespm/api
 
