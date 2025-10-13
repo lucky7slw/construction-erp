@@ -16,7 +16,7 @@ COPY packages/*/package.json ./packages/*/
 COPY tools/*/package.json ./tools/*/
 
 # Install dependencies
-RUN pnpm install --frozen-lockfile
+RUN pnpm install
 
 # Copy source code
 COPY . .
@@ -49,7 +49,7 @@ COPY packages/*/package.json ./packages/*/
 COPY tools/*/package.json ./tools/*/
 
 # Install production dependencies only
-RUN pnpm install --frozen-lockfile --production
+RUN pnpm install --production
 
 # Copy built application
 COPY --from=builder --chown=erp:erp /app/apps/web/.next ./apps/web/.next
