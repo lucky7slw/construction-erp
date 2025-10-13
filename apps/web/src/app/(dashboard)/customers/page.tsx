@@ -32,11 +32,11 @@ export default function CustomersPage() {
   const [selectedProjectId, setSelectedProjectId] = useState('');
 
   const { data: customers = [], isLoading } = useCustomers({
-    companyId: user?.companyId || '',
+    companyId: user?.companies?.[0]?.id || '',
   });
 
   const { data: projects = [] } = useProjects({
-    companyId: user?.companyId || '',
+    companyId: user?.companies?.[0]?.id || '',
   });
 
   const assignCustomer = useAssignCustomerToProject();
