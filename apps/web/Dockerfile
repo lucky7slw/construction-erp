@@ -36,8 +36,8 @@ ENV PORT=3000
 # Copy everything for workspace resolution
 COPY . .
 
-# Install production dependencies only
-RUN pnpm install --production
+# Install production dependencies only (ignore scripts to skip husky)
+RUN pnpm install --production --ignore-scripts
 
 # Copy built application
 COPY --from=builder --chown=erp:erp /app/apps/web/.next ./apps/web/.next
