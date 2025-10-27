@@ -598,11 +598,11 @@ export default function SelectionsTrackerPage() {
               projectId={projectId}
               initialData={{
                 name: selectedSelection.name,
-                description: selectedSelection.description,
+                description: selectedSelection.description ?? undefined,
                 category: selectedSelection.category,
-                room: selectedSelection.room,
-                dueDate: selectedSelection.dueDate,
-                customerId: selectedSelection.customerId,
+                room: selectedSelection.room ?? undefined,
+                dueDate: selectedSelection.dueDate ?? undefined,
+                customerId: selectedSelection.customerId ?? undefined,
                 status: selectedSelection.status,
               }}
               onSubmit={handleEditSubmit}
