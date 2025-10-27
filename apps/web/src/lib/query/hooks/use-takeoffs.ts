@@ -4,6 +4,7 @@ import { apiClient } from '../../api/client';
 // Types
 export type MeasurementType = 'AREA' | 'LINEAR' | 'VOLUME' | 'COUNT';
 export type TakeoffStatus = 'DRAFT' | 'IN_PROGRESS' | 'COMPLETED' | 'APPROVED';
+export type TakeoffUnit = 'FEET' | 'METERS' | 'INCHES' | 'CENTIMETERS';
 
 export type TakeoffMeasurement = {
   id: string;
@@ -48,7 +49,7 @@ export type Takeoff = {
   status: TakeoffStatus;
   drawingReference?: string;
   scale?: number;
-  unit?: string;
+  unit?: TakeoffUnit;
   totalQuantity?: number;
   layers: TakeoffLayer[];
   measurements: TakeoffMeasurement[];
