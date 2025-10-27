@@ -246,7 +246,7 @@ export default function AIInsightsPage() {
                     </CardHeader>
                     <CardContent>
                       <div className="space-y-4">
-                        {riskAssessment.data.risks.map((risk, index) => (
+                        {riskAssessment.data.risks.map((risk: any, index: number) => (
                           <div key={index} className="border rounded-lg p-4">
                             <div className="flex items-start justify-between mb-2">
                               <div className="flex-1">
@@ -286,7 +286,7 @@ export default function AIInsightsPage() {
                     </CardHeader>
                     <CardContent>
                       <ul className="space-y-3">
-                        {riskAssessment.data.recommendations.map((rec, index) => (
+                        {riskAssessment.data.recommendations.map((rec: any, index: number) => (
                           <li key={index} className="flex items-start gap-3">
                             <ChevronRight className="h-5 w-5 text-construction-600 mt-0.5 flex-shrink-0" />
                             <span className="text-sm">{rec}</span>

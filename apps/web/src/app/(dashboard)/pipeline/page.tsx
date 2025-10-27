@@ -147,7 +147,7 @@ export default function PipelinePage() {
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
-              {Object.entries(metrics.leadsByStatus || {}).map(([status, count]) => {
+              {Object.entries(metrics.leadsByStatus || {}).map(([status, count]: [string, any]) => {
                 const percentage = (count / metrics.totalLeads) * 100;
                 return (
                   <div key={status} className="space-y-1">
@@ -182,7 +182,7 @@ export default function PipelinePage() {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {metrics.topSources.slice(0, 5).map((source) => (
+              {metrics.topSources.slice(0, 5).map((source: any) => (
                 <div key={source.source} className="space-y-1">
                   <div className="flex items-center justify-between text-sm">
                     <span className="font-medium capitalize">{source.source.toLowerCase().replace('_', ' ')}</span>
