@@ -20,7 +20,8 @@ import { formatDistanceToNow, format } from 'date-fns';
 import { TimeTracker } from '@/components/time/time-tracker';
 
 export default function TimePage() {
-  const { data: timeEntries, isLoading } = useTimeEntries();
+  const { data: timeEntriesData, isLoading } = useTimeEntries();
+  const timeEntries = timeEntriesData?.timeEntries || [];
 
   const formatDuration = (hours: number) => {
     const h = Math.floor(hours);
