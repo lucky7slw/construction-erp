@@ -84,9 +84,9 @@ export default function ReportsPage() {
 
   // Time tracking metrics
   const timeMetrics = React.useMemo(() => {
-    if (!timeEntries) return { totalHours: 0, billableHours: 0, approvedHours: 0, pendingHours: 0 };
+    if (!timeEntries?.timeEntries) return { totalHours: 0, billableHours: 0, approvedHours: 0, pendingHours: 0 };
 
-    const filteredEntries = timeEntries.filter((entry: any) => {
+    const filteredEntries = timeEntries.timeEntries.filter((entry: any) => {
       if (!entry.date) return false;
       const entryDate = parseISO(entry.date);
       return isWithinInterval(entryDate, dateRange);
