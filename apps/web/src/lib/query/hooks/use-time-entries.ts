@@ -17,7 +17,7 @@ export function useTimeEntries(params?: { projectId?: string; userId?: string; s
     queryKey: timeEntryKeys.list(params || {}),
     queryFn: async () => {
       const response = await apiClient.getTimeEntries(params);
-      return response.timeEntries || [];
+      return response;
     },
     enabled: isAuthenticated,
   });
