@@ -17,10 +17,11 @@ export default function TimesheetPage() {
   const weekStart = startOfWeek(currentDate, { weekStartsOn: 1 }); // Monday
   const weekEnd = endOfWeek(currentDate, { weekStartsOn: 1 }); // Sunday
 
-  const { data: timeEntries, isLoading } = useTimeEntries({
+  const { data: timeEntriesData, isLoading } = useTimeEntries({
     startDate: weekStart.toISOString(),
     endDate: weekEnd.toISOString(),
   });
+  const timeEntries = timeEntriesData?.timeEntries || [];
 
   const daysInWeek = eachDayOfInterval({ start: weekStart, end: weekEnd });
 
