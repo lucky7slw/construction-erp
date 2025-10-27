@@ -22,6 +22,7 @@ export const UserSchema = z.object({
     id: z.string(),
     name: z.string(),
     isOwner: z.boolean(),
+    logo: z.string().optional(),
   })),
   roles: z.array(z.object({
     id: z.string(),
