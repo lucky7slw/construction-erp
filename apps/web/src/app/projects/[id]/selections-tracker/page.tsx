@@ -418,29 +418,27 @@ export default function SelectionsTrackerPage() {
                             )}
 
                             {/* Selected Option */}
-                            {selection.selectedOptionId && selection.options && (
-                              <div className="bg-blue-50 border border-blue-200 rounded p-3 mb-3">
-                                <div className="flex items-center gap-2 mb-1">
-                                  <CheckCircle2 className="h-4 w-4 text-blue-600" />
-                                  <span className="text-sm font-medium text-blue-900">Selected Option</span>
-                                </div>
-                                {selection.options.find((o: any) => o.id === selection.selectedOptionId) && (
+                            {(() => {
+                              const selectedOption = selection.options?.find((o: any) => o.id === selection.selectedOptionId);
+                              return selectedOption && selection.selectedOptionId && (
+                                <div className="bg-blue-50 border border-blue-200 rounded p-3 mb-3">
+                                  <div className="flex items-center gap-2 mb-1">
+                                    <CheckCircle2 className="h-4 w-4 text-blue-600" />
+                                    <span className="text-sm font-medium text-blue-900">Selected Option</span>
+                                  </div>
                                   <div>
                                     <p className="text-sm font-semibold text-blue-800">
-                                      {selection.options.find((o: any) => o.id === selection.selectedOptionId).name}
+                                      {selectedOption.name}
                                     </p>
-                                    {selection.options.find((o: any) => o.id === selection.selectedOptionId).price && (
+                                    {selectedOption.price && (
                                       <p className="text-sm text-blue-700">
-                                        $
-                                        {selection.options
-                                          .find((o: any) => o.id === selection.selectedOptionId)
-                                          .price.toLocaleString()}
+                                        ${selectedOption.price.toLocaleString()}
                                       </p>
                                     )}
                                   </div>
-                                )}
-                              </div>
-                            )}
+                                </div>
+                              );
+                            })()}
 
                             {/* Metadata */}
                             <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
