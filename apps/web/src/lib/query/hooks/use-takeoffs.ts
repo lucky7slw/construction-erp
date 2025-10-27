@@ -53,6 +53,7 @@ export type Takeoff = {
   layers: TakeoffLayer[];
   measurements: TakeoffMeasurement[];
   createdById: string;
+  createdBy?: string;
   createdAt: Date;
   updatedAt: Date;
 };
