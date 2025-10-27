@@ -111,7 +111,7 @@ export class WebSocketClient {
     eventTypes.forEach((eventType) => {
       this.socket?.on(eventType, (data: unknown) => {
         console.log(`[WebSocket] Received ${eventType}:`, data);
-        this.emit(eventType, data);
+        this.emit(eventType, data as any);
       });
     });
   }
