@@ -37,6 +37,16 @@ export interface Selection {
   approvedByUserId?: string | null;
   createdAt: Date;
   updatedAt: Date;
+  // Optional properties that may be included based on API query
+  room?: string | null;
+  selectedOptionId?: string | null;
+  createdBy?: string | null;
+  options?: Array<{
+    id: string;
+    name: string;
+    price?: number;
+    [key: string]: unknown;
+  }>;
 }
 
 export function useSelections(params: { projectId: string; status?: SelectionStatus; category?: SelectionCategory; customerId?: string }) {
