@@ -13,6 +13,7 @@ export type TeamMember = {
     lastName: string;
     email: string;
     avatar?: string;
+    phone?: string;
   };
 };
 
