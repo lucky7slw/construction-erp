@@ -370,7 +370,7 @@ export default function SelectionsTrackerPage() {
             </div>
           ) : (
             <div className="space-y-3">
-              {filteredSelections.map((selection) => {
+              {filteredSelections.map((selection: Selection) => {
                 const statusInfo = statusConfig[selection.status];
                 const StatusIcon = statusInfo.icon;
                 const overdue = isOverdue(selection);
