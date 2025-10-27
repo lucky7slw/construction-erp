@@ -151,7 +151,7 @@ export default function SelectionsTrackerPage() {
     try {
       await createSelection.mutateAsync({
         projectId,
-        ...data,
+        ...(data as object),
       });
       setCreateDialogOpen(false);
       toast({
