@@ -405,6 +405,14 @@ class ApiClient {
     return { data: result };
   }
 
+  async put<T = any>(endpoint: string, data?: any): Promise<{ data: T }> {
+    const result = await this.request<T>(endpoint, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    });
+    return { data: result };
+  }
+
   async delete<T = any>(endpoint: string): Promise<{ data: T }> {
     const result = await this.request<T>(endpoint, {
       method: 'DELETE',
