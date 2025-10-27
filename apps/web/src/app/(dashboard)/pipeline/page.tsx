@@ -37,7 +37,7 @@ const statusLabels: Record<LeadStatus, string> = {
 export default function PipelinePage() {
   const { user } = useAuth();
 
-  const { data: metrics, isLoading } = usePipelineMetrics(user?.companyId || '');
+  const { data: metrics, isLoading } = usePipelineMetrics(user?.companies?.[0]?.id || '');
 
   if (isLoading) {
     return (
