@@ -181,8 +181,12 @@ export function useLeads(params: { companyId: string; status?: LeadStatus; assig
   return useQuery({
     queryKey: ['leads', params],
     queryFn: async () => {
-      const response = await apiClient.get('/api/v1/crm/leads', { params });
-      return response.data.leads as Lead[];
+      // Filter params to only include what the API expects
+      const apiParams: Record<string, string> = { companyId: params.companyId };
+      if (params.status) apiParams.status = params.status;
+      const queryString = new URLSearchParams(apiParams).toString();
+      const response = await apiClient.get(`/api/v1/crm/leads?${queryString}`);
+      return (response as any).leads as Lead[];
     },
     enabled: !!params.companyId,
   });
@@ -193,7 +197,7 @@ export function useLead(leadId: string) {
     queryKey: ['leads', leadId],
     queryFn: async () => {
       const response = await apiClient.get(`/api/v1/crm/leads/${leadId}`);
-      return response.data.lead as Lead;
+      return (response as any).lead as Lead;
     },
     enabled: !!leadId,
   });
@@ -205,7 +209,7 @@ export function useCreateLead() {
   return useMutation({
     mutationFn: async (data: CreateLeadData) => {
       const response = await apiClient.post('/api/v1/crm/leads', data);
-      return response.data.lead as Lead;
+      return (response as any).lead as Lead;
     },
     onSuccess: (lead) => {
       queryClient.invalidateQueries({ queryKey: ['leads'] });
@@ -220,7 +224,7 @@ export function useUpdateLead() {
   return useMutation({
     mutationFn: async ({ leadId, data }: { leadId: string; data: UpdateLeadData }) => {
       const response = await apiClient.patch(`/api/v1/crm/leads/${leadId}`, data);
-      return response.data.lead as Lead;
+      return (response as any).lead as Lead;
     },
     onSuccess: (lead) => {
       queryClient.invalidateQueries({ queryKey: ['leads'] });
@@ -236,7 +240,7 @@ export function useConvertLead() {
   return useMutation({
     mutationFn: async ({ leadId, options }: { leadId: string; options?: ConvertLeadOptions }) => {
       const response = await apiClient.post(`/api/v1/crm/leads/${leadId}/convert`, options || {});
-      return response.data as ConvertLeadResult;
+      return response as unknown as ConvertLeadResult;
     },
     onSuccess: (result) => {
       queryClient.invalidateQueries({ queryKey: ['leads'] });
@@ -254,8 +258,9 @@ export function useCustomers(params: { companyId: string; isActive?: boolean }) 
   return useQuery({
     queryKey: ['customers', params],
     queryFn: async () => {
-      const response = await apiClient.get('/api/v1/crm/customers', { params });
-      return response.data.customers as Customer[];
+      const queryString = new URLSearchParams(params as any).toString();
+      const response = await apiClient.get(`/api/v1/crm/customers?${queryString}`);
+      return (response as any).customers as Customer[];
     },
     enabled: !!params.companyId,
   });
@@ -266,7 +271,7 @@ export function useCustomer(customerId: string) {
     queryKey: ['customers', customerId],
     queryFn: async () => {
       const response = await apiClient.get(`/api/v1/crm/customers/${customerId}`);
-      return response.data.customer as Customer;
+      return (response as any).customer as Customer;
     },
     enabled: !!customerId,
   });
@@ -277,7 +282,7 @@ export function useCustomerProjects(customerId: string) {
     queryKey: ['customers', customerId, 'projects'],
     queryFn: async () => {
       const response = await apiClient.get(`/api/v1/crm/customers/${customerId}/projects`);
-      return response.data.projects;
+      return (response as any).projects;
     },
     enabled: !!customerId,
   });
@@ -289,7 +294,7 @@ export function useCustomerInteractions(customerId: string) {
     queryKey: ['interactions', 'customer', customerId],
     queryFn: async () => {
       const response = await apiClient.get(`/api/v1/crm/customers/${customerId}/interactions`);
-      return response.data.interactions as CustomerInteraction[];
+      return (response as any).interactions as CustomerInteraction[];
     },
     enabled: !!customerId,
   });
@@ -300,7 +305,7 @@ export function useLeadInteractions(leadId: string) {
     queryKey: ['interactions', 'lead', leadId],
     queryFn: async () => {
       const response = await apiClient.get(`/api/v1/crm/leads/${leadId}/interactions`);
-      return response.data.interactions as CustomerInteraction[];
+      return (response as any).interactions as CustomerInteraction[];
     },
     enabled: !!leadId,
   });
@@ -312,7 +317,7 @@ export function useCreateInteraction() {
   return useMutation({
     mutationFn: async (data: CreateInteractionData) => {
       const response = await apiClient.post('/api/v1/crm/interactions', data);
-      return response.data.interaction as CustomerInteraction;
+      return (response as any).interaction as CustomerInteraction;
     },
     onSuccess: (interaction) => {
       queryClient.invalidateQueries({ queryKey: ['interactions', 'customer', interaction.customerId] });
@@ -328,10 +333,9 @@ export function useLeadFollowUps(leadId: string, status?: FollowUpStatus) {
   return useQuery({
     queryKey: ['follow-ups', leadId, { status }],
     queryFn: async () => {
-      const response = await apiClient.get(`/api/v1/crm/leads/${leadId}/follow-ups`, {
-        params: { status },
-      });
-      return response.data.followUps as FollowUpTask[];
+      const queryParams = status ? `?status=${status}` : '';
+      const response = await apiClient.get(`/api/v1/crm/leads/${leadId}/follow-ups${queryParams}`);
+      return (response as any).followUps as FollowUpTask[];
     },
     enabled: !!leadId,
   });
@@ -343,7 +347,7 @@ export function useCreateFollowUp() {
   return useMutation({
     mutationFn: async (data: CreateFollowUpData) => {
       const response = await apiClient.post('/api/v1/crm/follow-ups', data);
-      return response.data.followUp as FollowUpTask;
+      return (response as any).followUp as FollowUpTask;
     },
     onSuccess: (followUp) => {
       queryClient.invalidateQueries({ queryKey: ['follow-ups', followUp.leadId] });
@@ -357,7 +361,7 @@ export function useUpdateFollowUp() {
   return useMutation({
     mutationFn: async ({ followUpId, data }: { followUpId: string; data: UpdateFollowUpData }) => {
       const response = await apiClient.patch(`/api/v1/crm/follow-ups/${followUpId}`, data);
-      return response.data.followUp as FollowUpTask;
+      return (response as any).followUp as FollowUpTask;
     },
     onSuccess: (followUp) => {
       queryClient.invalidateQueries({ queryKey: ['follow-ups', followUp.leadId] });
@@ -371,7 +375,7 @@ export function usePipelineMetrics(companyId: string) {
     queryKey: ['pipeline', companyId],
     queryFn: async () => {
       const response = await apiClient.get(`/api/v1/crm/pipeline/${companyId}`);
-      return response.data.metrics as PipelineMetrics;
+      return (response as any).metrics as PipelineMetrics;
     },
     enabled: !!companyId,
     staleTime: 60000, // 1 minute - pipeline metrics don't change frequently
@@ -387,7 +391,7 @@ export function useAssignCustomerToProject() {
       const response = await apiClient.post(`/api/v1/crm/projects/${projectId}/assign-customer`, {
         customerId,
       });
-      return response.data.project;
+      return (response as any).project;
     },
     onSuccess: (project) => {
       queryClient.invalidateQueries({ queryKey: ['projects'] });
@@ -405,7 +409,7 @@ export function useRemoveCustomerFromProject() {
   return useMutation({
     mutationFn: async (projectId: string) => {
       const response = await apiClient.delete(`/api/v1/crm/projects/${projectId}/assign-customer`);
-      return response.data.project;
+      return (response as any).project;
     },
     onSuccess: (project) => {
       queryClient.invalidateQueries({ queryKey: ['projects'] });
