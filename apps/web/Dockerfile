@@ -41,7 +41,6 @@ RUN pnpm install --production --ignore-scripts
 
 # Copy built application
 COPY --from=builder --chown=erp:erp /app/apps/web/.next ./apps/web/.next
-COPY --from=builder --chown=erp:erp /app/apps/web/public ./apps/web/public
 COPY --from=builder --chown=erp:erp /app/apps/web/next.config.js ./apps/web/
 COPY --from=builder --chown=erp:erp /app/packages/*/dist ./packages/
 
