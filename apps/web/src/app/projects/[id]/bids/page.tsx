@@ -80,7 +80,7 @@ export default function BidsPage() {
   const { data: bids = [], isLoading: bidsLoading } = useBids({
     projectId,
     status: selectedStatus || undefined,
-  });
+  }) as { data: any[]; isLoading: boolean };
 
   const createBid = useCreateBid();
   const updateBid = useUpdateBid();
@@ -90,7 +90,7 @@ export default function BidsPage() {
 
   // Filter bids
   const filteredBids = React.useMemo(() => {
-    return bids.filter((bid) => {
+    return bids.filter((bid: any) => {
       const matchesSearch =
         !searchQuery ||
         bid.bidNumber.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -388,8 +388,8 @@ export default function BidsPage() {
             </div>
           ) : (
             <div className="space-y-3">
-              {filteredBids.map((bid) => {
-                const statusInfo = statusConfig[bid.status];
+              {filteredBids.map((bid: any) => {
+                const statusInfo = statusConfig[bid.status as BidStatus];
                 const StatusIcon = statusInfo.icon;
 
                 return (
