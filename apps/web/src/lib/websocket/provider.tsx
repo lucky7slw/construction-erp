@@ -72,13 +72,13 @@ export function WebSocketProvider({ children }: { children: React.ReactNode }) {
       queryClient.invalidateQueries({ queryKey: projectKeys.lists() });
     };
 
-    const handleProjectUpdated = (data: { project: { id: string } }) => {
+    const handleProjectUpdated = (data: any) => {
       console.log('[WebSocket Provider] Project updated:', data.project.id);
       queryClient.invalidateQueries({ queryKey: projectKeys.detail(data.project.id) });
       queryClient.invalidateQueries({ queryKey: projectKeys.lists() });
     };
 
-    const handleProjectDeleted = (data: { projectId: string }) => {
+    const handleProjectDeleted = (data: any) => {
       console.log('[WebSocket Provider] Project deleted:', data.projectId);
       queryClient.removeQueries({ queryKey: projectKeys.detail(data.projectId) });
       queryClient.invalidateQueries({ queryKey: projectKeys.lists() });
@@ -90,19 +90,19 @@ export function WebSocketProvider({ children }: { children: React.ReactNode }) {
       queryClient.invalidateQueries({ queryKey: estimateKeys.lists() });
     };
 
-    const handleEstimateUpdated = (data: { estimate: { id: string } }) => {
+    const handleEstimateUpdated = (data: any) => {
       console.log('[WebSocket Provider] Estimate updated:', data.estimate.id);
       queryClient.invalidateQueries({ queryKey: estimateKeys.detail(data.estimate.id) });
       queryClient.invalidateQueries({ queryKey: estimateKeys.lists() });
     };
 
-    const handleEstimateApproved = (data: { estimate: { id: string } }) => {
+    const handleEstimateApproved = (data: any) => {
       console.log('[WebSocket Provider] Estimate approved:', data.estimate.id);
       queryClient.invalidateQueries({ queryKey: estimateKeys.detail(data.estimate.id) });
       queryClient.invalidateQueries({ queryKey: estimateKeys.lists() });
     };
 
-    const handleEstimateDeleted = (data: { estimateId: string }) => {
+    const handleEstimateDeleted = (data: any) => {
       console.log('[WebSocket Provider] Estimate deleted:', data.estimateId);
       queryClient.removeQueries({ queryKey: estimateKeys.detail(data.estimateId) });
       queryClient.invalidateQueries({ queryKey: estimateKeys.lists() });
