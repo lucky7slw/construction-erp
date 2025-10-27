@@ -119,7 +119,7 @@ export default function SelectionsTrackerPage() {
 
   // Calculate selection stats
   const selectionStats = React.useMemo(() => {
-    const byStatus = selections.reduce((acc, selection: Selection) => {
+    const byStatus = selections.reduce((acc: Record<string, number>, selection: Selection) => {
       acc[selection.status] = (acc[selection.status] || 0) + 1;
       return acc;
     }, {} as Record<string, number>);
