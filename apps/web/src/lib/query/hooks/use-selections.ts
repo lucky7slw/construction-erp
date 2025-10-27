@@ -4,6 +4,41 @@ import { apiClient } from '../../api/client';
 export type SelectionStatus = 'PENDING' | 'SELECTED' | 'APPROVED' | 'ORDERED' | 'INSTALLED' | 'REJECTED';
 export type SelectionCategory = 'FLOORING' | 'CABINETS' | 'COUNTERTOPS' | 'APPLIANCES' | 'FIXTURES' | 'LIGHTING' | 'TILE' | 'PAINT' | 'HARDWARE' | 'OTHER';
 
+export interface Selection {
+  id: string;
+  projectId: string;
+  customerId?: string | null;
+  category: SelectionCategory;
+  name: string;
+  description?: string | null;
+  status: SelectionStatus;
+  manufacturer?: string | null;
+  model?: string | null;
+  sku?: string | null;
+  color?: string | null;
+  finish?: string | null;
+  quantity: number;
+  unit: string;
+  unitPrice?: number | null;
+  totalPrice?: number | null;
+  budgetAmount?: number | null;
+  variance?: number | null;
+  vendorName?: string | null;
+  vendorContact?: string | null;
+  leadTime?: number | null;
+  dueDate?: Date | null;
+  selectedDate?: Date | null;
+  approvedDate?: Date | null;
+  orderedDate?: Date | null;
+  installedDate?: Date | null;
+  notes?: string | null;
+  imageUrls?: unknown;
+  specSheetUrl?: string | null;
+  approvedByUserId?: string | null;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
 export function useSelections(params: { projectId: string; status?: SelectionStatus; category?: SelectionCategory; customerId?: string }) {
   return useQuery({
     queryKey: ['selections', params],

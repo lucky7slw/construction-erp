@@ -32,6 +32,7 @@ import {
   useUpdateSelection,
   useDeleteSelection,
   useApproveSelection,
+  type Selection,
   type SelectionStatus,
   type SelectionCategory,
 } from '@/lib/query/hooks/use-selections';
@@ -88,7 +89,7 @@ export default function SelectionsTrackerPage() {
   const [createDialogOpen, setCreateDialogOpen] = React.useState(false);
   const [editDialogOpen, setEditDialogOpen] = React.useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = React.useState(false);
-  const [selectedSelection, setSelectedSelection] = React.useState<any>(null);
+  const [selectedSelection, setSelectedSelection] = React.useState<Selection | null>(null);
 
   const { toast } = useToast();
 
@@ -106,7 +107,7 @@ export default function SelectionsTrackerPage() {
 
   // Filter selections
   const filteredSelections = React.useMemo(() => {
-    return selections.filter((selection) => {
+    return selections.filter((selection: Selection) => {
       const matchesSearch =
         !searchQuery ||
         selection.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -118,13 +119,13 @@ export default function SelectionsTrackerPage() {
 
   // Calculate selection stats
   const selectionStats = React.useMemo(() => {
-    const byStatus = selections.reduce((acc, selection) => {
+    const byStatus = selections.reduce((acc, selection: Selection) => {
       acc[selection.status] = (acc[selection.status] || 0) + 1;
       return acc;
     }, {} as Record<string, number>);
 
     const overdue = selections.filter(
-      (s) => s.dueDate && s.dueDate < new Date() && !['APPROVED', 'ORDERED', 'INSTALLED'].includes(s.status)
+      (s: Selection) => s.dueDate && s.dueDate < new Date() && !['APPROVED', 'ORDERED', 'INSTALLED'].includes(s.status)
     ).length;
 
     return {
@@ -137,7 +138,7 @@ export default function SelectionsTrackerPage() {
     };
   }, [selections]);
 
-  const isOverdue = (selection: any): boolean => {
+  const isOverdue = (selection: Selection): boolean => {
     return !!(
       selection.dueDate &&
       selection.dueDate < new Date() &&
@@ -146,7 +147,7 @@ export default function SelectionsTrackerPage() {
   };
 
   // Handler functions
-  const handleCreateSubmit = async (data: any) => {
+  const handleCreateSubmit = async (data: unknown) => {
     try {
       await createSelection.mutateAsync({
         projectId,
@@ -166,7 +167,7 @@ export default function SelectionsTrackerPage() {
     }
   };
 
-  const handleEditSubmit = async (data: any) => {
+  const handleEditSubmit = async (data: unknown) => {
     if (!selectedSelection) return;
 
     try {
@@ -209,7 +210,7 @@ export default function SelectionsTrackerPage() {
     }
   };
 
-  const handleApprove = async (selection: any) => {
+  const handleApprove = async (selection: Selection) => {
     try {
       await approveSelection.mutateAsync(selection.id);
       toast({
