@@ -475,9 +475,7 @@ export function useBidStatistics(projectId: string) {
 export function useExportBidComparison() {
   return useMutation({
     mutationFn: async (projectId: string) => {
-      const response = await apiClient.get(`/bids-comparison-export?projectId=${projectId}`, {
-        responseType: 'blob',
-      });
+      const response = await apiClient.get(`/bids-comparison-export?projectId=${projectId}`);
 
       // Create download link
       const url = window.URL.createObjectURL(new Blob([response.data]));
