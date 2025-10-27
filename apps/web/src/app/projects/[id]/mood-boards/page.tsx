@@ -95,12 +95,12 @@ export default function MoodBoardsPage() {
 
   // Get unique rooms
   const rooms = React.useMemo(() => {
-    return Array.from(new Set(moodBoards.map((mb) => mb.room).filter(Boolean)));
+    return Array.from(new Set(moodBoards.map((mb: any) => mb.room).filter(Boolean)));
   }, [moodBoards]);
 
   // Filter mood boards
   const filteredMoodBoards = React.useMemo(() => {
-    return moodBoards.filter((moodBoard) => {
+    return moodBoards.filter((moodBoard: any) => {
       const matchesSearch =
         !searchQuery ||
         moodBoard.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -112,13 +112,13 @@ export default function MoodBoardsPage() {
 
   // Calculate mood board stats
   const moodBoardStats = React.useMemo(() => {
-    const byStatus = moodBoards.reduce((acc, mb) => {
+    const byStatus = moodBoards.reduce((acc: any, mb: any) => {
       acc[mb.status] = (acc[mb.status] || 0) + 1;
       return acc;
     }, {} as Record<string, number>);
 
-    const totalItems = moodBoards.reduce((sum, mb) => sum + (mb.items?.length || 0), 0);
-    const totalComments = moodBoards.reduce((sum, mb) => sum + (mb.comments?.length || 0), 0);
+    const totalItems = moodBoards.reduce((sum: number, mb: any) => sum + (mb.items?.length || 0), 0);
+    const totalComments = moodBoards.reduce((sum: number, mb: any) => sum + (mb.comments?.length || 0), 0);
 
     return {
       total: moodBoards.length,
@@ -349,7 +349,7 @@ export default function MoodBoardsPage() {
                 >
                   All Rooms
                 </Button>
-                {rooms.map((room) => (
+                {rooms.map((room: any) => (
                   <Button
                     key={room}
                     variant={selectedRoom === room ? 'default' : 'outline'}
@@ -390,8 +390,8 @@ export default function MoodBoardsPage() {
             </div>
           ) : (
             <div className="space-y-3">
-              {filteredMoodBoards.map((moodBoard) => {
-                const statusInfo = statusConfig[moodBoard.status];
+              {filteredMoodBoards.map((moodBoard: any) => {
+                const statusInfo = statusConfig[moodBoard.status as keyof typeof statusConfig];
                 const StatusIcon = statusInfo.icon;
 
                 return (
