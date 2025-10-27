@@ -18,11 +18,8 @@ export function useUsers() {
   return useQuery({
     queryKey: userKeys.lists(),
     queryFn: async () => {
-      const response = await apiClient.getUsers();
-      if (!response.success) {
-        throw new Error(response.error?.message || 'Failed to fetch users');
-      }
-      return response.data || [];
+      const response = await apiClient.get('/users');
+      return (response as any).data.users || [];
     },
     enabled: isAuthenticated,
   });
@@ -34,11 +31,8 @@ export function useUser(id: string) {
   return useQuery({
     queryKey: userKeys.detail(id),
     queryFn: async () => {
-      const response = await apiClient.getUser(id);
-      if (!response.success) {
-        throw new Error(response.error?.message || 'Failed to fetch user');
-      }
-      return response.data;
+      const response = await apiClient.get(`/users/${id}`);
+      return (response as any).data.user;
     },
     enabled: isAuthenticated && !!id,
   });
