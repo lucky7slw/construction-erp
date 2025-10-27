@@ -31,7 +31,7 @@ RUN addgroup --system --gid 1001 erp && \
     adduser --system --uid 1001 erp
 
 # Copy everything for workspace resolution
-COPY . .
+COPY --chown=erp:erp . .
 
 # Install production dependencies only (ignore scripts to skip husky)
 RUN pnpm install --production --ignore-scripts

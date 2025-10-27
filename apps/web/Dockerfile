@@ -33,8 +33,8 @@ ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV PORT=3000
 
-# Copy everything for workspace resolution
-COPY . .
+# Copy everything for workspace resolution (before creating user so we can chown)
+COPY --chown=erp:erp . .
 
 # Install production dependencies only (ignore scripts to skip husky)
 RUN pnpm install --production --ignore-scripts
