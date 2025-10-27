@@ -43,11 +43,8 @@ export function useUpdateUser() {
 
   return useMutation({
     mutationFn: async ({ id, data }: { id: string; data: Partial<User> }) => {
-      const response = await apiClient.updateUser(id, data);
-      if (!response.success) {
-        throw new Error(response.error?.message || 'Failed to update user');
-      }
-      return response.data;
+      const response = await apiClient.patch(`/users/${id}`, data);
+      return (response as any).data.user;
     },
     onSuccess: (updatedUser) => {
       // Update the specific user in cache
@@ -65,11 +62,8 @@ export function useDeleteUser() {
 
   return useMutation({
     mutationFn: async (id: string) => {
-      const response = await apiClient.deleteUser(id);
-      if (!response.success) {
-        throw new Error(response.error?.message || 'Failed to delete user');
-      }
-      return response.data;
+      await apiClient.delete(`/users/${id}`);
+      return id;
     },
     onSuccess: (_, deletedId) => {
       // Remove from cache
