@@ -1,10 +1,10 @@
 import { useState, useEffect } from 'react';
-import { useAuth } from '@/lib/store/auth-store';
+import { useAuthStore } from '@/lib/store/auth-store';
 
 export function useModuleAccess() {
   const [visibleModules, setVisibleModules] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
-  const { accessToken } = useAuth();
+  const accessToken = useAuthStore((state) => state.accessToken);
 
   useEffect(() => {
     fetchModules();
