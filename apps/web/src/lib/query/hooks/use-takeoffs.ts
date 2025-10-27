@@ -43,6 +43,7 @@ export type Takeoff = {
   name: string;
   projectId: string;
   estimateId?: string;
+  linkedEstimateId?: string;
   description?: string;
   status: TakeoffStatus;
   drawingReference?: string;
