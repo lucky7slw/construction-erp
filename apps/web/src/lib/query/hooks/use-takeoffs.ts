@@ -440,9 +440,7 @@ export function useTakeoffSummary(takeoffId: string) {
 export function useExportTakeoff() {
   return useMutation({
     mutationFn: async (takeoffId: string) => {
-      const response = await apiClient.get(`/takeoffs/${takeoffId}/export`, {
-        responseType: 'blob',
-      });
+      const response = await apiClient.get(`/takeoffs/${takeoffId}/export`);
 
       // Create download link
       const url = window.URL.createObjectURL(new Blob([response.data]));
