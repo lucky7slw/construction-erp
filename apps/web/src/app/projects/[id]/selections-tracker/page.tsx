@@ -24,6 +24,7 @@ import {
   Trash2,
   MoreVertical,
   AlertCircle,
+  Loader2,
 } from 'lucide-react';
 import { useProject } from '@/lib/query/hooks/use-projects';
 import {
