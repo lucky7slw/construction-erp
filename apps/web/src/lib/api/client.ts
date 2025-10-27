@@ -103,6 +103,10 @@ export const CreateProjectRequestSchema = z.object({
   startDate: z.string().optional(),
   endDate: z.string().optional(),
   budget: z.number().optional(),
+  address: z.string().optional(),
+  city: z.string().optional(),
+  state: z.string().optional(),
+  zipCode: z.string().optional(),
 });
 
 export type Project = z.infer<typeof ProjectSchema>;

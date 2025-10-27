@@ -51,6 +51,10 @@ export default function NewProjectPage() {
       startDate: '',
       endDate: '',
       budget: undefined,
+      address: '',
+      city: '',
+      state: '',
+      zipCode: '',
     },
   });
 
