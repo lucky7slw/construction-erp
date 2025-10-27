@@ -35,9 +35,7 @@ export default function CustomersPage() {
     companyId: user?.companies?.[0]?.id || '',
   });
 
-  const { data: projects = [] } = useProjects({
-    companyId: user?.companies?.[0]?.id || '',
-  });
+  const { data: projects = [] } = useProjects();
 
   const assignCustomer = useAssignCustomerToProject();
 
