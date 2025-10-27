@@ -43,7 +43,7 @@ export default function LeadsPage() {
   const [projectName, setProjectName] = useState('');
 
   const { data: leads = [], isLoading } = useLeads({
-    companyId: user?.companyId || '',
+    companyId: user?.companies?.[0]?.id || '',
     status: statusFilter === 'ALL' ? undefined : statusFilter,
   });
 
