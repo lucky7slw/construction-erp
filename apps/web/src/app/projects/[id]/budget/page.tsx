@@ -180,7 +180,7 @@ function CategoryBreakdownChart({ categoryBreakdown }: { categoryBreakdown: Reco
                 fill="#8884d8"
                 dataKey="value"
               >
-                {pieData.map((entry, index) => (
+                {pieData.map((entry: any, index: number) => (
                   <Cell key={`cell-${index}`} fill={COLORS[entry.name as keyof typeof COLORS]} />
                 ))}
               </Pie>
