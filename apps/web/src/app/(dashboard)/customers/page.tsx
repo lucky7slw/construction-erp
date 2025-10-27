@@ -188,13 +188,13 @@ export default function CustomersPage() {
                 </SelectTrigger>
                 <SelectContent>
                   {projects
-                    .filter((p) => !p.customerId) // Only show unassigned projects
-                    .map((project) => (
+                    .filter((p: any) => !p.customerId) // Only show unassigned projects
+                    .map((project: any) => (
                       <SelectItem key={project.id} value={project.id}>
                         {project.name}
                       </SelectItem>
                     ))}
-                  {projects.filter((p) => !p.customerId).length === 0 && (
+                  {projects.filter((p: any) => !p.customerId).length === 0 && (
                     <div className="py-2 px-2 text-sm text-muted-foreground">
                       No unassigned projects available
                     </div>
