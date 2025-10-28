@@ -28,6 +28,9 @@ RUN corepack enable
 RUN addgroup --system --gid 1001 erp && \
     adduser --system --uid 1001 erp
 
+# Change ownership of /app to erp user
+RUN chown -R erp:erp /app
+
 # Set environment variables
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1

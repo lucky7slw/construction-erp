@@ -30,6 +30,9 @@ RUN corepack enable
 RUN addgroup --system --gid 1001 erp && \
     adduser --system --uid 1001 erp
 
+# Change ownership of /app to erp user
+RUN chown -R erp:erp /app
+
 # Copy everything for workspace resolution
 COPY --chown=erp:erp . .
 
