@@ -1,0 +1,83 @@
+groups:
+  - name: database_alerts
+    interval: 30s
+    rules:
+      # Database is down
+      - alert: PostgreSQLDown
+        expr: up{job="postgres"} == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "PostgreSQL is down"
+          description: "PostgreSQL has been down for more than 1 minute."
+
+      # High connection count
+      - alert: HighDatabaseConnections
+        expr: (pg_stat_database_numbackends / pg_settings_max_connections) > 0.8
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High database connection count"
+          description: "Database connections at {{ $value | humanizePercentage }} of max."
+
+      # Slow queries
+      - alert: SlowQueries
+        expr: rate(pg_stat_database_blks_read[5m]) > 1000
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High number of slow queries"
+          description: "Database is reading {{ $value }} blocks/sec, indicating slow queries."
+
+      # High replication lag (if using replication)
+      - alert: HighReplicationLag
+        expr: pg_replication_lag_seconds > 60
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High replication lag"
+          description: "Replication lag is {{ $value }} seconds."
+
+      # Database disk space
+      - alert: LowDatabaseDiskSpace
+        expr: (node_filesystem_avail_bytes{mountpoint="/var/lib/postgresql/data"} / node_filesystem_size_bytes{mountpoint="/var/lib/postgresql/data"}) < 0.1
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Low database disk space"
+          description: "Database disk space is at {{ $value | humanizePercentage }}."
+
+      # Long running transactions
+      - alert: LongRunningTransaction
+        expr: max(pg_stat_activity_max_tx_duration) > 3600
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Long running transaction detected"
+          description: "Transaction has been running for {{ $value | humanizeDuration }}."
+
+      # Redis is down
+      - alert: RedisDown
+        expr: up{job="redis"} == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Redis is down"
+          description: "Redis has been down for more than 1 minute."
+
+      # High Redis memory usage
+      - alert: HighRedisMemory
+        expr: redis_memory_used_bytes / redis_memory_max_bytes > 0.9
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High Redis memory usage"
+          description: "Redis memory usage is at {{ $value | humanizePercentage }}."

@@ -1,0 +1,93 @@
+groups:
+  - name: infrastructure_alerts
+    interval: 30s
+    rules:
+      # High system CPU
+      - alert: HighSystemCPU
+        expr: (100 - (avg by(instance) (irate(node_cpu_seconds_total{mode="idle"}[5m])) * 100)) > 80
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High system CPU usage"
+          description: "System CPU usage is {{ $value | humanizePercentage }} on {{ $labels.instance }}."
+
+      # High system memory
+      - alert: HighSystemMemory
+        expr: (1 - (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)) > 0.9
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "High system memory usage"
+          description: "System memory usage is {{ $value | humanizePercentage }} on {{ $labels.instance }}."
+
+      # Low disk space
+      - alert: LowDiskSpace
+        expr: (node_filesystem_avail_bytes / node_filesystem_size_bytes) < 0.1
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Low disk space"
+          description: "Disk space is at {{ $value | humanizePercentage }} on {{ $labels.instance }} {{ $labels.mountpoint }}."
+
+      # High disk I/O
+      - alert: HighDiskIO
+        expr: rate(node_disk_io_time_seconds_total[5m]) > 0.9
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High disk I/O"
+          description: "Disk I/O is at {{ $value | humanizePercentage }} on {{ $labels.instance }}."
+
+      # Nginx is down
+      - alert: NginxDown
+        expr: up{job="nginx"} == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Nginx is down"
+          description: "Nginx has been down for more than 1 minute."
+
+      # High Nginx connection rate
+      - alert: HighNginxConnections
+        expr: nginx_connections_active > 1000
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High Nginx connection count"
+          description: "Nginx has {{ $value }} active connections."
+
+      # SSL certificate expiration
+      - alert: SSLCertificateExpiringSoon
+        expr: (ssl_cert_not_after - time()) / 86400 < 30
+        for: 1h
+        labels:
+          severity: warning
+        annotations:
+          summary: "SSL certificate expiring soon"
+          description: "SSL certificate for {{ $labels.domain }} expires in {{ $value }} days."
+
+      # Container restart
+      - alert: ContainerRestarted
+        expr: rate(kube_pod_container_status_restarts_total[15m]) > 0
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Container {{ $labels.container }} restarted"
+          description: "Container {{ $labels.container }} in pod {{ $labels.pod }} has restarted."
+
+      # Too many container restarts
+      - alert: HighContainerRestartRate
+        expr: rate(kube_pod_container_status_restarts_total[1h]) > 5
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "High container restart rate"
+          description: "Container {{ $labels.container }} has restarted {{ $value }} times in the last hour."

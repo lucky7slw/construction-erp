@@ -1,0 +1,53 @@
+groups:
+  - name: api_alerts
+    interval: 30s
+    rules:
+      # API is down
+      - alert: APIDown
+        expr: up{job=~"api-.*"} == 0
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "API instance {{ $labels.deployment }} is down"
+          description: "API instance {{ $labels.deployment }} has been down for more than 2 minutes."
+
+      # High response time
+      - alert: HighResponseTime
+        expr: histogram_quantile(0.95, rate(http_request_duration_seconds_bucket{job=~"api-.*"}[5m])) > 2
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High response time on {{ $labels.deployment }}"
+          description: "95th percentile response time is {{ $value }}s on {{ $labels.deployment }}."
+
+      # High error rate
+      - alert: HighErrorRate
+        expr: rate(http_requests_total{job=~"api-.*", status=~"5.."}[5m]) > 0.05
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "High error rate on {{ $labels.deployment }}"
+          description: "Error rate is {{ $value | humanizePercentage }} on {{ $labels.deployment }}."
+
+      # High memory usage
+      - alert: HighMemoryUsage
+        expr: (container_memory_usage_bytes{name=~"hhhomes-api-.*"} / container_spec_memory_limit_bytes{name=~"hhhomes-api-.*"}) > 0.9
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High memory usage on {{ $labels.name }}"
+          description: "Memory usage is {{ $value | humanizePercentage }} on {{ $labels.name }}."
+
+      # High CPU usage
+      - alert: HighCPUUsage
+        expr: rate(container_cpu_usage_seconds_total{name=~"hhhomes-api-.*"}[5m]) > 0.8
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High CPU usage on {{ $labels.name }}"
+          description: "CPU usage is {{ $value | humanizePercentage }} on {{ $labels.name }}."
