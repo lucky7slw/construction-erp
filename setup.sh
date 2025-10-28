@@ -75,9 +75,9 @@ fi
 
 # Generate secure random passwords
 print_info "Generating secure passwords..."
-DB_PASSWORD=$(openssl rand -base64 32 | tr -d "=+/" | cut -c1-25)
-JWT_SECRET=$(openssl rand -base64 64 | tr -d "=+/" | cut -c1-50)
-JWT_REFRESH_SECRET=$(openssl rand -base64 64 | tr -d "=+/" | cut -c1-50)
+DB_PASSWORD=$(openssl rand -base64 32 | tr -d "=+/\n" | cut -c1-25)
+JWT_SECRET=$(openssl rand -base64 64 | tr -d "=+/\n" | cut -c1-50)
+JWT_REFRESH_SECRET=$(openssl rand -base64 64 | tr -d "=+/\n" | cut -c1-50)
 
 # Create .env file
 print_info "Creating environment configuration..."
