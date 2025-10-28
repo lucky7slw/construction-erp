@@ -33,9 +33,6 @@ RUN addgroup --system --gid 1001 erp && \
 # Copy everything for workspace resolution
 COPY --chown=erp:erp . .
 
-# Install production dependencies only (ignore scripts to skip husky)
-RUN pnpm install --production --ignore-scripts
-
 # Copy built application
 COPY --from=builder --chown=erp:erp /app/apps/api/dist ./apps/api/dist
 COPY --from=builder --chown=erp:erp /app/packages/*/dist ./packages/
@@ -46,6 +43,13 @@ COPY --from=builder --chown=erp:erp /app/apps/api/prisma ./apps/api/prisma
 # Set environment variables
 ENV NODE_ENV=production
 ENV PORT=3001
+
+# Switch to non-root user BEFORE installing dependencies
+USER erp
+
+# Install production dependencies only (ignore scripts to skip husky)
+# This must run as erp user so node_modules is owned by erp
+RUN pnpm install --production --ignore-scripts
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
@@ -58,9 +62,6 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
     req.on('error', () => process.exit(1)); \
     req.on('timeout', () => process.exit(1)); \
     req.end();"
-
-# Switch to non-root user
-USER erp
 
 # Expose port
 EXPOSE 3001

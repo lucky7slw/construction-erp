@@ -33,11 +33,8 @@ ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV PORT=3000
 
-# Copy everything for workspace resolution (before creating user so we can chown)
+# Copy everything for workspace resolution
 COPY --chown=erp:erp . .
-
-# Install production dependencies only (ignore scripts to skip husky)
-RUN pnpm install --production --ignore-scripts
 
 # Copy built application
 COPY --from=builder --chown=erp:erp /app/apps/web/.next ./apps/web/.next
@@ -46,6 +43,13 @@ COPY --from=builder --chown=erp:erp /app/packages/*/dist ./packages/
 
 # Copy necessary files
 COPY --chown=erp:erp apps/web/.env.example ./apps/web/.env.local
+
+# Switch to non-root user BEFORE installing dependencies
+USER erp
+
+# Install production dependencies only (ignore scripts to skip husky)
+# This must run as erp user so node_modules is owned by erp
+RUN pnpm install --production --ignore-scripts
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
@@ -58,9 +62,6 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
     req.on('error', () => process.exit(1)); \
     req.on('timeout', () => process.exit(1)); \
     req.end();"
-
-# Switch to non-root user
-USER erp
 
 # Expose port
 EXPOSE 3000
