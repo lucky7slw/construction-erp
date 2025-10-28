@@ -3,6 +3,7 @@
   "version": "0.1.0",
   "description": "Construction ERP API Service",
   "main": "dist/index.js",
+  "type": "commonjs",
   "scripts": {
     "dev": "tsx watch src/index.ts",
     "build": "tsup",

@@ -70,4 +70,4 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
 EXPOSE 3001
 
 # Start the application
-CMD ["node", "apps/api/dist/index.mjs"]
+CMD ["node", "apps/api/dist/index.js"]
