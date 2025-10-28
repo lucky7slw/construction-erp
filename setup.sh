@@ -187,13 +187,29 @@ EOF
 
 # Start services
 $COMPOSE_CMD up -d postgres
-sleep 10  # Wait for postgres to be ready
+
+# Wait for postgres to be healthy
+print_info "Waiting for database to be ready..."
+max_attempts=30
+attempt=0
+while [ $attempt -lt $max_attempts ]; do
+    if $COMPOSE_CMD exec postgres pg_isready -U erpuser -d erp_production > /dev/null 2>&1; then
+        break
+    fi
+    attempt=$((attempt + 1))
+    sleep 2
+done
+
+if [ $attempt -eq $max_attempts ]; then
+    print_error "Database failed to become ready"
+    exit 1
+fi
 
 print_success "Database started"
 
 # Run database migrations
 print_info "Running database migrations..."
-$COMPOSE_CMD run --rm api sh -c "cd apps/api && npx prisma migrate deploy && npx prisma generate"
+$COMPOSE_CMD run --rm -e DATABASE_URL="postgresql://erpuser:${DB_PASSWORD}@postgres:5432/erp_production" api sh -c "cd apps/api && npx prisma migrate deploy && npx prisma generate"
 
 print_success "Database migrations completed"
 
