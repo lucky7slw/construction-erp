@@ -524,7 +524,7 @@ export class AuthService {
       roles: user.userRoles.map((ur: any) => ({
         id: ur.role.id,
         name: ur.role.name,
-        companyId: ur.companyId,
+        companyId: ur.companyId || undefined,
         permissions: ur.role.permissions.map((rp: any) => ({
           resource: rp.permission.resource,
           action: rp.permission.action,
