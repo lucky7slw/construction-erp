@@ -80,7 +80,7 @@ async function registerPlugins() {
 
   await server.register(import('@fastify/cors'), {
     origin: process.env.NODE_ENV === 'production'
-      ? [process.env.WEB_BASE_URL || 'http://localhost:3000']
+      ? (process.env.WEB_BASE_URL || 'http://localhost:3000').split(',').map(url => url.trim())
       : true,
     credentials: true
   });

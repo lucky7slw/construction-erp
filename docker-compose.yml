@@ -48,7 +48,7 @@ services:
       PORT: 3001
       DATABASE_URL: postgresql://erpuser:${DB_PASSWORD:-ChangeThisPassword123!}@postgres:5432/erp_production
       REDIS_URL: redis://redis:6379
-      WEB_BASE_URL: https://projects.humblehowlhomes.com
+      WEB_BASE_URL: http://192.168.1.122:3000,https://projects.humblehowlhomes.com
       JWT_SECRET: ${JWT_SECRET:-change-this-super-secret-jwt-key}
       JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET:-change-this-super-secret-refresh-key}
       GEMINI_API_KEY: ${GEMINI_API_KEY:-}
