@@ -118,3 +118,7 @@ Dockerfile*
 
 # Claude
 .claude/
+
+# Nginx and SSL certificates (mounted at runtime)
+nginx/
+certbot/
