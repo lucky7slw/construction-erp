@@ -80,7 +80,10 @@
       "Bash(rm:*)",
       "Bash(sed:*)",
       "Bash(git push:*)",
-      "Bash(pnpm build:*)"
+      "Bash(pnpm build:*)",
+      "Bash(go version:*)",
+      "Bash(PATH=\"/c/Program Files/Docker/Docker/resources/bin:$PATH\" docker compose down:*)",
+      "Bash(/tmp/api_logs_command.txt)"
     ],
     "deny": [],
     "ask": []
