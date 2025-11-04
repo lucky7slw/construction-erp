@@ -33,6 +33,7 @@ services:
       DATABASE_URL: postgresql://erpuser:${DB_PASSWORD:-ChangeThisPassword123!}@postgres:5432/erp_production
       JWT_SECRET: ${JWT_SECRET:-change-this-super-secret-jwt-key}
       JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET:-change-this-super-secret-refresh-key}
+      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
       UPLOAD_DIR: /app/uploads
     volumes:
       - uploads:/app/uploads
