@@ -40,8 +40,9 @@ COPY --chown=erp:erp . .
 COPY --from=builder --chown=erp:erp /app/apps/api/dist ./apps/api/dist
 COPY --from=builder --chown=erp:erp /app/packages/*/dist ./packages/
 
-# Copy Prisma schema and migrations
+# Copy Prisma schema, migrations, and generated client (includes native binaries)
 COPY --from=builder --chown=erp:erp /app/apps/api/prisma ./apps/api/prisma
+COPY --from=builder --chown=erp:erp /app/apps/api/src/generated ./apps/api/src/generated
 
 # Set environment variables
 ENV NODE_ENV=production
