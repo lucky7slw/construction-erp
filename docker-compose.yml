@@ -55,7 +55,6 @@ services:
       UPLOAD_DIR: /app/uploads
     volumes:
       - uploads:/app/uploads
-      - ./apps/api/.env:/app/.env:ro
     depends_on:
       postgres:
         condition: service_healthy
@@ -81,7 +80,7 @@ services:
     environment:
       NODE_ENV: production
       PORT: 3000
-      NEXT_PUBLIC_API_URL: https://api.${DOMAIN:-yourdomain.com}
+      NEXT_PUBLIC_API_URL: http://192.168.1.122:3001
     depends_on:
       - api
     networks:
