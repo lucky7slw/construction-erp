@@ -566,4 +566,141 @@ export async function aiRoutes(
       return handleAIError(error, reply);
     }
   });
+
+  // Property Market Analysis
+  fastify.post('/analyze-property', {
+    schema: {
+      body: {
+        type: 'object',
+        required: ['address', 'squareFeet', 'bedrooms', 'bathrooms', 'propertyType'],
+        properties: {
+          address: { type: 'string', minLength: 1 },
+          squareFeet: { type: 'number', minimum: 1 },
+          bedrooms: { type: 'number', minimum: 1 },
+          bathrooms: { type: 'number', minimum: 0.5 },
+          propertyType: {
+            type: 'string',
+            enum: ['SINGLE_FAMILY', 'CONDO', 'TOWNHOUSE', 'MULTI_FAMILY', 'LAND', 'COMMERCIAL', 'OTHER'],
+          },
+          yearBuilt: { type: 'number' },
+          lotSize: { type: 'number' },
+          purchasePrice: { type: 'number' },
+          renovationBudget: { type: 'number' },
+        },
+      },
+      response: {
+        200: {
+          type: 'object',
+          properties: {
+            success: { type: 'boolean' },
+            data: {
+              type: 'object',
+              properties: {
+                estimatedMarketValue: { type: 'number' },
+                estimatedARV: { type: 'number' },
+                saleRecommendation: {
+                  type: 'string',
+                  enum: ['STRONG_BUY', 'BUY', 'HOLD', 'SELL', 'AVOID'],
+                },
+                salePriceRange: {
+                  type: 'object',
+                  properties: {
+                    low: { type: 'number' },
+                    mid: { type: 'number' },
+                    high: { type: 'number' },
+                  },
+                },
+                daysOnMarket: { type: 'number' },
+                marketTrend: {
+                  type: 'string',
+                  enum: ['RISING', 'STABLE', 'DECLINING'],
+                },
+                estimatedMonthlyRent: { type: 'number' },
+                rentalYield: { type: 'number' },
+                rentPriceRange: {
+                  type: 'object',
+                  properties: {
+                    low: { type: 'number' },
+                    mid: { type: 'number' },
+                    high: { type: 'number' },
+                  },
+                },
+                occupancyRate: { type: 'number' },
+                rentalDemand: {
+                  type: 'string',
+                  enum: ['HIGH', 'MEDIUM', 'LOW'],
+                },
+                sellVsRentRecommendation: {
+                  type: 'string',
+                  enum: ['SELL', 'RENT', 'NEUTRAL'],
+                },
+                sellVsRentReasoning: { type: 'string' },
+                projectedSaleROI: { type: 'number' },
+                projectedRentalROI: { type: 'number' },
+                breakEvenMonths: { type: 'number' },
+                neighborhoodScore: { type: 'number', minimum: 1, maximum: 10 },
+                comparableProperties: {
+                  type: 'array',
+                  items: {
+                    type: 'object',
+                    properties: {
+                      address: { type: 'string' },
+                      price: { type: 'number' },
+                      squareFeet: { type: 'number' },
+                      bedrooms: { type: 'number' },
+                      bathrooms: { type: 'number' },
+                      daysOnMarket: { type: 'number' },
+                    },
+                  },
+                },
+                marketInsights: {
+                  type: 'array',
+                  items: { type: 'string' },
+                },
+                risks: {
+                  type: 'array',
+                  items: { type: 'string' },
+                },
+                opportunities: {
+                  type: 'array',
+                  items: { type: 'string' },
+                },
+                confidence: { type: 'number', minimum: 0, maximum: 1 },
+                dataSource: { type: 'string' },
+                analysisDate: { type: 'string' },
+              },
+            },
+            confidence: { type: 'number', minimum: 0, maximum: 1 },
+          },
+        },
+      },
+      tags: ['AI'],
+      summary: 'Analyze property for flip house investment',
+      description: 'Comprehensive AI market analysis including sale value, rental income, ROI calculations, and sell vs rent recommendation',
+    },
+  }, async (request: FastifyRequest, reply: FastifyReply) => {
+    try {
+      const body = request.body as any;
+      const userId = (request as any).user?.id;
+
+      const result = await aiService.analyzeProperty(
+        {
+          address: body.address,
+          squareFeet: body.squareFeet,
+          bedrooms: body.bedrooms,
+          bathrooms: body.bathrooms,
+          propertyType: body.propertyType,
+          yearBuilt: body.yearBuilt,
+          lotSize: body.lotSize,
+          purchasePrice: body.purchasePrice,
+          renovationBudget: body.renovationBudget,
+        },
+        userId
+      );
+
+      return reply.send(result);
+    } catch (error) {
+      return handleAIError(error, reply);
+    }
+  });
 }

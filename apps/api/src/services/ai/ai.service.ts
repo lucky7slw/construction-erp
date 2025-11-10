@@ -13,6 +13,9 @@ import {
   ProjectRiskAssessmentSchema,
   VoiceProcessing,
   VoiceProcessingSchema,
+  PropertyMarketAnalysis,
+  PropertyMarketAnalysisSchema,
+  PropertyMarketAnalysisRequest,
   AIServiceError,
   GeminiAPIError,
   PromptError,
@@ -485,6 +488,61 @@ export class AIService {
       throw new AIServiceError(
         'Failed to generate quote',
         'QUOTE_GENERATION_ERROR',
+        { request, error }
+      );
+    }
+  }
+
+  /**
+   * Analyze property for flip house investment decision
+   * Provides comprehensive market analysis including sell vs rent comparison
+   */
+  async analyzeProperty(
+    request: PropertyMarketAnalysisRequest,
+    userId?: string
+  ): Promise<AIResponse<PropertyMarketAnalysis>> {
+    try {
+      const variables = {
+        address: request.address,
+        squareFeet: request.squareFeet.toString(),
+        bedrooms: request.bedrooms.toString(),
+        bathrooms: request.bathrooms.toString(),
+        propertyType: request.propertyType,
+        yearBuilt: request.yearBuilt?.toString() || '',
+        lotSize: request.lotSize?.toString() || '',
+        purchasePrice: request.purchasePrice?.toString() || '',
+        renovationBudget: request.renovationBudget?.toString() || '',
+      };
+
+      const prompt = renderPrompt('PROPERTY_MARKET_ANALYSIS', variables);
+      const response = await this.geminiClient.generateContent(
+        prompt,
+        userId || 'system'
+      );
+
+      const cleanResponse = this.extractJsonFromResponse(response);
+      const parsed = JSON.parse(cleanResponse);
+      const analysis = PropertyMarketAnalysisSchema.parse(parsed);
+
+      // Store analysis for learning
+      if (userId) {
+        await this.storeAIContext(userId, 'property_analysis', {
+          request,
+          analysis,
+          timestamp: new Date(),
+        });
+      }
+
+      return {
+        success: true,
+        data: analysis,
+        confidence: analysis.confidence,
+      };
+
+    } catch (error) {
+      throw new AIServiceError(
+        'Failed to analyze property',
+        'PROPERTY_ANALYSIS_ERROR',
         { request, error }
       );
     }
