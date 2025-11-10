@@ -247,8 +247,14 @@ async function registerRoutes() {
 
   // AI routes (protected)
   await server.register(async function(fastify) {
-    // Add authentication middleware to AI routes
-    fastify.addHook('preHandler', authMiddleware.authenticate);
+    // Add authentication middleware to AI routes, except health endpoint
+    fastify.addHook('preHandler', async (request, reply) => {
+      // Skip auth for health endpoint
+      if (request.url === '/ai/health') {
+        return;
+      }
+      await authMiddleware.authenticate(request, reply);
+    });
 
     await fastify.register(aiRoutes, {
       prefix: '/ai',
