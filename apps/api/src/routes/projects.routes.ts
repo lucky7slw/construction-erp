@@ -1,15 +1,17 @@
 import type { FastifyPluginAsync } from 'fastify';
 import type { PrismaClient } from '../generated/prisma';
+import type { AIService } from '../services/ai/ai.service';
 
 type ProjectsRoutesOptions = {
   prisma: PrismaClient;
+  aiService?: AIService;
 };
 
 export const projectsRoutes: FastifyPluginAsync<ProjectsRoutesOptions> = async (
   fastify,
   options
 ) => {
-  const { prisma } = options;
+  const { prisma, aiService } = options;
 
   // GET /api/v1/projects - List all projects
   fastify.get('/', {
@@ -401,5 +403,100 @@ export const projectsRoutes: FastifyPluginAsync<ProjectsRoutesOptions> = async (
     // wsService.broadcastToCompany(existingProject.companyId, 'project:deleted', { projectId: request.params.id });
 
     return { message: 'Project deleted successfully' };
+  });
+
+  // POST /api/v1/projects/:id/analyze - Run AI analysis on project
+  fastify.post<{
+    Params: { id: string };
+  }>('/:id/analyze', {
+    schema: {
+      security: [{ bearerAuth: [] }],
+      tags: ['Projects'],
+      summary: 'Run AI analysis on flip house project',
+      params: {
+        type: 'object',
+        properties: {
+          id: { type: 'string' },
+        },
+        required: ['id'],
+      },
+    },
+  }, async (request, reply) => {
+    if (!request.user) {
+      return reply.code(401).send({ error: 'Authentication required' });
+    }
+
+    // Fetch project with access check
+    const project = await prisma.project.findFirst({
+      where: {
+        id: request.params.id,
+        OR: [
+          { createdById: request.user.id },
+          {
+            users: {
+              some: {
+                userId: request.user.id,
+              },
+            },
+          },
+        ],
+      },
+    });
+
+    if (!project) {
+      return reply.code(404).send({ error: 'Project not found or access denied' });
+    }
+
+    // Check if project has property data
+    if (!project.squareFeet || !project.bedrooms || !project.bathrooms) {
+      return reply.code(400).send({
+        error: 'Project must have property details (square feet, bedrooms, bathrooms) to analyze'
+      });
+    }
+
+    // Build property analysis request
+    const propertyData = {
+      address: [project.streetAddress, project.city, project.state, project.zipCode].filter(Boolean).join(', ') || 'Address not provided',
+      squareFeet: project.squareFeet,
+      bedrooms: project.bedrooms,
+      bathrooms: Number(project.bathrooms),
+      propertyType: project.propertyType || 'SINGLE_FAMILY',
+      yearBuilt: project.yearBuilt || undefined,
+      lotSize: project.lotSize ? Number(project.lotSize) : undefined,
+      purchasePrice: project.purchasePrice ? Number(project.purchasePrice) : undefined,
+      renovationBudget: project.renovationBudget ? Number(project.renovationBudget) : undefined,
+    };
+
+    // Call AI service analyze-property endpoint
+    try {
+      if (!aiService) {
+        return reply.code(500).send({ error: 'AI service not available' });
+      }
+
+      const analysis = await aiService.analyzeProperty(propertyData);
+
+      // Update project with analysis results
+      const updatedProject = await prisma.project.update({
+        where: { id: project.id },
+        data: {
+          aiAnalysisData: analysis,
+          aiAnalysisDate: new Date(),
+          estimatedARV: analysis.estimatedARV || undefined,
+          estimatedRent: analysis.estimatedMonthlyRent || undefined,
+        },
+      });
+
+      return {
+        message: 'Property analysis completed successfully',
+        analysis,
+        project: updatedProject,
+      };
+    } catch (error) {
+      console.error('AI analysis error:', error);
+      return reply.code(500).send({
+        error: 'Failed to analyze property',
+        details: error instanceof Error ? error.message : 'Unknown error',
+      });
+    }
   });
 };

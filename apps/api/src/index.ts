@@ -292,7 +292,8 @@ async function registerRoutes() {
     // Projects routes
     await fastify.register(projectsRoutes, {
       prefix: '/projects',
-      prisma
+      prisma,
+      aiService
     });
 
     // Project Settings routes
