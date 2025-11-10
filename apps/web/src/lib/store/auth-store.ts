@@ -25,9 +25,6 @@ interface AuthState {
 
 const STORAGE_KEY = 'hhhomespm-auth';
 
-// Track if we have stored auth data (for initial _hasHydrated value)
-let hasStoredAuth = false;
-
 // Initialize API client tokens from localStorage on module load
 if (typeof window !== 'undefined') {
   const stored = localStorage.getItem(STORAGE_KEY);
@@ -46,7 +43,6 @@ if (typeof window !== 'undefined') {
         apiClient.setAccessToken(state.accessToken);
         apiClient.setRefreshToken(state.refreshToken);
         console.log('[Auth Store] ✓ Tokens successfully set in API client');
-        hasStoredAuth = true; // Mark that we have stored auth data
       } else {
         console.warn('[Auth Store] ✗ Tokens not found in state. Debug info:', {
           hasAccessToken: !!state.accessToken,
@@ -74,7 +70,7 @@ export const useAuthStore = create<AuthState>()(
       isAuthenticated: false,
       isLoading: false,
       error: null,
-      _hasHydrated: hasStoredAuth, // Start true if we found stored auth data
+      _hasHydrated: false, // Always start false to avoid SSR hydration mismatch
 
       // Actions
       login: async (credentials: LoginRequest) => {
@@ -214,13 +210,8 @@ export const useAuthStore = create<AuthState>()(
       onRehydrateStorage: (state) => {
         // This runs before rehydration - return callback that runs after
         return (state, error) => {
-          // Immediately set tokens in API client after rehydration (if not already set)
-          if (state?.accessToken && state?.refreshToken && !hasStoredAuth) {
-            apiClient.setAccessToken(state.accessToken);
-            apiClient.setRefreshToken(state.refreshToken);
-          }
-
-          // Always mark as hydrated when rehydration completes
+          // Tokens are already set at module load time in the code above
+          // Just mark as hydrated when rehydration completes
           useAuthStore.setState({ _hasHydrated: true });
           console.log('[Auth Store] Rehydration complete, _hasHydrated set to true');
         };
