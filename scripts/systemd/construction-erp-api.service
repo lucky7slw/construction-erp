@@ -1,0 +1,42 @@
+[Unit]
+Description=Construction ERP API Server
+Documentation=https://github.com/yourusername/construction-erp
+After=network.target postgresql.service redis.service
+Wants=postgresql.service redis.service
+
+[Service]
+Type=simple
+User=YOUR_USERNAME
+WorkingDirectory=/home/YOUR_USERNAME/construction-erp/apps/api
+Environment="NODE_ENV=production"
+Environment="PORT=3001"
+EnvironmentFile=/home/YOUR_USERNAME/construction-erp/apps/api/.env
+
+# Start command
+ExecStart=/usr/bin/node dist/index.js
+
+# Restart policy
+Restart=always
+RestartSec=10s
+StartLimitInterval=5min
+StartLimitBurst=5
+
+# Health check
+ExecStartPost=/bin/sleep 5
+ExecStartPost=/usr/bin/curl -sf http://localhost:3001/api/v1/health || /bin/systemctl restart construction-erp-api.service
+
+# Logging
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=erp-api
+
+# Security
+NoNewPrivileges=true
+PrivateTmp=true
+
+# Resource limits
+LimitNOFILE=65536
+LimitNPROC=4096
+
+[Install]
+WantedBy=multi-user.target

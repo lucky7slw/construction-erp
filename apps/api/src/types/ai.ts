@@ -139,3 +139,72 @@ export class CacheError extends AIServiceError {
     super(message, 'CACHE_ERROR', details);
   }
 }
+
+// Property Market Analysis Types
+export const PropertyMarketAnalysisRequestSchema = z.object({
+  address: z.string().min(1),
+  squareFeet: z.number().positive(),
+  bedrooms: z.number().int().positive(),
+  bathrooms: z.number().positive(),
+  propertyType: z.enum(['SINGLE_FAMILY', 'CONDO', 'TOWNHOUSE', 'MULTI_FAMILY', 'LAND', 'COMMERCIAL', 'OTHER']),
+  yearBuilt: z.number().int().optional(),
+  lotSize: z.number().positive().optional(),
+  purchasePrice: z.number().positive().optional(),
+  renovationBudget: z.number().positive().optional(),
+});
+
+export type PropertyMarketAnalysisRequest = z.infer<typeof PropertyMarketAnalysisRequestSchema>;
+
+export const PropertyMarketAnalysisSchema = z.object({
+  // Sale Analysis
+  estimatedMarketValue: z.number(),
+  estimatedARV: z.number(), // After Repair Value
+  saleRecommendation: z.enum(['STRONG_BUY', 'BUY', 'HOLD', 'SELL', 'AVOID']),
+  salePriceRange: z.object({
+    low: z.number(),
+    mid: z.number(),
+    high: z.number(),
+  }),
+  daysOnMarket: z.number(),
+  marketTrend: z.enum(['RISING', 'STABLE', 'DECLINING']),
+
+  // Rental Analysis
+  estimatedMonthlyRent: z.number(),
+  rentalYield: z.number(), // Annual percentage
+  rentPriceRange: z.object({
+    low: z.number(),
+    mid: z.number(),
+    high: z.number(),
+  }),
+  occupancyRate: z.number(), // Percentage
+  rentalDemand: z.enum(['HIGH', 'MEDIUM', 'LOW']),
+
+  // Comparative Analysis
+  sellVsRentRecommendation: z.enum(['SELL', 'RENT', 'NEUTRAL']),
+  sellVsRentReasoning: z.string(),
+
+  // ROI Calculations
+  projectedSaleROI: z.number(), // Percentage
+  projectedRentalROI: z.number(), // Percentage including cash flow
+  breakEvenMonths: z.number().optional(), // For rental
+
+  // Market Insights
+  neighborhoodScore: z.number().min(1).max(10),
+  comparableProperties: z.array(z.object({
+    address: z.string(),
+    price: z.number(),
+    squareFeet: z.number(),
+    bedrooms: z.number(),
+    bathrooms: z.number(),
+    daysOnMarket: z.number(),
+  })).max(5),
+  marketInsights: z.array(z.string()),
+  risks: z.array(z.string()),
+  opportunities: z.array(z.string()),
+
+  confidence: z.number().min(0).max(1),
+  dataSource: z.string(),
+  analysisDate: z.string(),
+});
+
+export type PropertyMarketAnalysis = z.infer<typeof PropertyMarketAnalysisSchema>;

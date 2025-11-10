@@ -71,6 +71,8 @@ dist
 # Gatsby files
 .cache/
 public
+# But allow Next.js public directories
+!apps/*/public
 
 # Vuepress build output
 .vuepress/dist

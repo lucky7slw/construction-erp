@@ -289,6 +289,25 @@ enum ProjectStatus {
   CANCELLED
 }
 
+enum ProjectType {
+  NEW_CONSTRUCTION
+  RENOVATION
+  FLIP_HOUSE
+  COMMERCIAL
+  MAINTENANCE
+  OTHER
+}
+
+enum PropertyType {
+  SINGLE_FAMILY
+  CONDO
+  TOWNHOUSE
+  MULTI_FAMILY
+  LAND
+  COMMERCIAL
+  OTHER
+}
+
 model Project {
   id           String        @id @default(cuid())
   name         String
@@ -300,6 +319,28 @@ model Project {
   actualHours  Decimal       @default(0) @db.Decimal(10, 2)
   budget       Decimal?      @db.Decimal(12, 2)
   actualCost   Decimal       @default(0) @db.Decimal(12, 2)
+
+  // Flip House specific fields
+  projectType       ProjectType?
+  propertyType      PropertyType?
+  purchasePrice     Decimal?      @db.Decimal(12, 2)
+  renovationBudget  Decimal?      @db.Decimal(12, 2)
+  squareFeet        Int?
+  bedrooms          Int?
+  bathrooms         Decimal?      @db.Decimal(3, 1)
+  lotSize           Decimal?      @db.Decimal(10, 2)
+  yearBuilt         Int?
+  acquisitionDate   DateTime?
+  targetSaleDate    DateTime?
+  estimatedARV      Decimal?      @db.Decimal(12, 2) // After Repair Value
+  estimatedRent     Decimal?      @db.Decimal(10, 2) // Monthly rent estimate
+  streetAddress     String?
+  city              String?
+  state             String?
+  zipCode           String?
+  aiAnalysisData    Json?         // Store Gemini AI analysis results
+  aiAnalysisDate    DateTime?     // When AI analysis was last run
+
   companyId    String
   customerId   String?
   createdById  String
