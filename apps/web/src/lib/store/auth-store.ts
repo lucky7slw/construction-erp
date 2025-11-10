@@ -70,7 +70,7 @@ export const useAuthStore = create<AuthState>()(
       isAuthenticated: false,
       isLoading: false,
       error: null,
-      _hasHydrated: false, // Always start false to avoid SSR hydration mismatch
+      _hasHydrated: false, // Will be set to true after first render
 
       // Actions
       login: async (credentials: LoginRequest) => {

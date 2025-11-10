@@ -97,7 +97,7 @@ export default async function deckRoutes(fastify: FastifyInstance, options: Deck
             companyId,
             name: plan.projectInfo.name,
             description: `${plan.projectInfo.deckType} deck - ${plan.projectInfo.dimensions.totalSquareFeet} sq ft`,
-            status: 'PLANNING',
+            status: 'DRAFT',
             deckType: plan.projectInfo.deckType as any,
             deckShape: plan.projectInfo.deckShape as any,
             primaryMaterial: validatedRequest.primaryMaterial || 'PRESSURE_TREATED_LUMBER',

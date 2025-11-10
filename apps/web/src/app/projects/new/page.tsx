@@ -74,7 +74,7 @@ export default function NewProjectPage() {
       name: '',
       description: '',
       companyId: '',
-      status: 'PLANNING',
+      status: 'DRAFT',
       startDate: '',
       endDate: '',
       budget: undefined,
@@ -322,7 +322,6 @@ export default function NewProjectPage() {
                       </FormControl>
                       <SelectContent>
                         <SelectItem value="DRAFT">Draft</SelectItem>
-                        <SelectItem value="PLANNING">Planning</SelectItem>
                         <SelectItem value="ACTIVE">Active</SelectItem>
                         <SelectItem value="ON_HOLD">On Hold</SelectItem>
                         <SelectItem value="COMPLETED">Completed</SelectItem>
