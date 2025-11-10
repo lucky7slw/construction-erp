@@ -207,13 +207,16 @@ export const useAuthStore = create<AuthState>()(
         refreshToken: state.refreshToken,
         isAuthenticated: state.isAuthenticated,
       }),
-      onRehydrateStorage: (state) => {
+      onRehydrateStorage: () => {
+        console.log('[Auth Store] onRehydrateStorage: outer function called (store created)');
         // This runs before rehydration - return callback that runs after
         return (state, error) => {
+          console.log('[Auth Store] onRehydrateStorage: inner callback called (rehydration complete)');
+          console.log('[Auth Store] State after rehydration:', { state, error });
           // Tokens are already set at module load time in the code above
           // Just mark as hydrated when rehydration completes
           useAuthStore.setState({ _hasHydrated: true });
-          console.log('[Auth Store] Rehydration complete, _hasHydrated set to true');
+          console.log('[Auth Store] ✓ _hasHydrated set to true');
         };
       },
     }
