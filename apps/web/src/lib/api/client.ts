@@ -376,6 +376,7 @@ class ApiClient {
     try {
       await this.request<void>('/auth/logout', {
         method: 'POST',
+        body: JSON.stringify({}),
       });
     } finally {
       // Clear tokens even if logout fails
