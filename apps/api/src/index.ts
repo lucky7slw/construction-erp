@@ -82,7 +82,7 @@ async function registerPlugins() {
     origin: process.env.NODE_ENV === 'production'
       ? (origin, callback) => {
           const allowedOrigins = (process.env.WEB_BASE_URL || 'http://localhost:3000').split(',').map(url => url.trim());
-          if (allowedOrigins.includes(origin)) {
+          if (!origin || allowedOrigins.includes(origin)) {
             callback(null, true);
           } else {
             callback(new Error('Not allowed by CORS'), false);
