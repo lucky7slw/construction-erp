@@ -1,32 +1,25 @@
 'use client';
 
-import * as React from 'react';
+import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/lib/store/auth-store';
-import { LoginForm } from '@/components/auth/login-form';
 import { PageSpinner } from '@/components/ui/spinner';
 
 export default function HomePage() {
   const router = useRouter();
   const { isAuthenticated, isLoading } = useAuthStore();
 
-  React.useEffect(() => {
-    if (!isLoading && isAuthenticated) {
-      router.push('/dashboard');
+  useEffect(() => {
+    // Always redirect from root to appropriate page
+    if (!isLoading) {
+      if (isAuthenticated) {
+        router.replace('/dashboard');
+      } else {
+        router.replace('/auth/login');
+      }
     }
   }, [isAuthenticated, isLoading, router]);
 
-  if (isLoading) {
-    return <PageSpinner message="Checking authentication..." />;
-  }
-
-  if (isAuthenticated) {
-    return <PageSpinner message="Redirecting to dashboard..." />;
-  }
-
-  return (
-    <LoginForm
-      onSuccess={() => router.push('/dashboard')}
-    />
-  );
+  // Show loading state while redirecting
+  return <PageSpinner message={isAuthenticated ? "Redirecting to dashboard..." : "Loading..."} />;
 }
