@@ -197,6 +197,7 @@ export class GeminiClient {
       );
       return result.trim().toLowerCase() === 'ok';
     } catch (error) {
+      console.error('Gemini health check failed:', error);
       return false;
     }
   }
