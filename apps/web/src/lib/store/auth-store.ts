@@ -207,18 +207,28 @@ export const useAuthStore = create<AuthState>()(
         refreshToken: state.refreshToken,
         isAuthenticated: state.isAuthenticated,
       }),
-      onRehydrateStorage: (state) => {
-        // This runs before rehydration - return callback that runs after
-        return (state, error) => {
-          // Tokens are already set at module load time in the code above
-          // Just mark as hydrated when rehydration completes
-          useAuthStore.setState({ _hasHydrated: true });
-          console.log('[Auth Store] Rehydration complete, _hasHydrated set to true');
-        };
-      },
     }
   )
 );
+
+// Set hydration flag after store creation
+// Rehydration from localStorage happens synchronously during create()
+// So by this point, the store is fully rehydrated and ready
+if (typeof window !== 'undefined') {
+  console.log('[Auth Store] Setting up post-creation hydration flag...');
+  // Use setTimeout to ensure this runs after current call stack
+  // This guarantees useAuthStore variable is fully assigned
+  setTimeout(() => {
+    const currentState = useAuthStore.getState();
+    console.log('[Auth Store] Setting _hasHydrated to true. Current auth state:', {
+      isAuthenticated: currentState.isAuthenticated,
+      hasUser: !!currentState.user,
+      hasTokens: !!(currentState.accessToken && currentState.refreshToken),
+    });
+    useAuthStore.setState({ _hasHydrated: true });
+    console.log('[Auth Store] ✓ _hasHydrated set to true');
+  }, 0);
+}
 
 // Selectors for easier access to specific state
 export const useAuth = () => {
