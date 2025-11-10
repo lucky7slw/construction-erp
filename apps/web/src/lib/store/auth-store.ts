@@ -25,6 +25,9 @@ interface AuthState {
 
 const STORAGE_KEY = 'hhhomespm-auth';
 
+// Track if we have stored auth data (for initial _hasHydrated value)
+let hasStoredAuth = false;
+
 // Initialize API client tokens from localStorage on module load
 if (typeof window !== 'undefined') {
   const stored = localStorage.getItem(STORAGE_KEY);
@@ -43,6 +46,7 @@ if (typeof window !== 'undefined') {
         apiClient.setAccessToken(state.accessToken);
         apiClient.setRefreshToken(state.refreshToken);
         console.log('[Auth Store] ✓ Tokens successfully set in API client');
+        hasStoredAuth = true; // Mark that we have stored auth data
       } else {
         console.warn('[Auth Store] ✗ Tokens not found in state. Debug info:', {
           hasAccessToken: !!state.accessToken,
@@ -70,7 +74,7 @@ export const useAuthStore = create<AuthState>()(
       isAuthenticated: false,
       isLoading: false,
       error: null,
-      _hasHydrated: false,
+      _hasHydrated: hasStoredAuth, // Start true if we found stored auth data
 
       // Actions
       login: async (credentials: LoginRequest) => {
@@ -210,14 +214,15 @@ export const useAuthStore = create<AuthState>()(
       onRehydrateStorage: (state) => {
         // This runs before rehydration - return callback that runs after
         return (state, error) => {
-          // Immediately set tokens in API client after rehydration
-          if (state?.accessToken && state?.refreshToken) {
+          // Immediately set tokens in API client after rehydration (if not already set)
+          if (state?.accessToken && state?.refreshToken && !hasStoredAuth) {
             apiClient.setAccessToken(state.accessToken);
             apiClient.setRefreshToken(state.refreshToken);
           }
 
-          // Mark as hydrated - use setState directly since we can't call actions on state object
+          // Always mark as hydrated when rehydration completes
           useAuthStore.setState({ _hasHydrated: true });
+          console.log('[Auth Store] Rehydration complete, _hasHydrated set to true');
         };
       },
     }
