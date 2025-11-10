@@ -1,0 +1,42 @@
+[Unit]
+Description=Construction ERP Web Application
+Documentation=https://github.com/yourusername/construction-erp
+After=network.target construction-erp-api.service
+Wants=construction-erp-api.service
+
+[Service]
+Type=simple
+User=YOUR_USERNAME
+WorkingDirectory=/home/YOUR_USERNAME/construction-erp/apps/web
+Environment="NODE_ENV=production"
+Environment="PORT=3000"
+EnvironmentFile=/home/YOUR_USERNAME/construction-erp/apps/web/.env.local
+
+# Start command (Next.js production server)
+ExecStart=/usr/bin/node server.js
+
+# Restart policy
+Restart=always
+RestartSec=10s
+StartLimitInterval=5min
+StartLimitBurst=5
+
+# Health check
+ExecStartPost=/bin/sleep 5
+ExecStartPost=/usr/bin/curl -sf http://localhost:3000 || /bin/systemctl restart construction-erp-web.service
+
+# Logging
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=erp-web
+
+# Security
+NoNewPrivileges=true
+PrivateTmp=true
+
+# Resource limits
+LimitNOFILE=65536
+LimitNPROC=4096
+
+[Install]
+WantedBy=multi-user.target
