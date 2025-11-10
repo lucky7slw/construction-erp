@@ -84,7 +84,8 @@
       "Bash(go version:*)",
       "Bash(PATH=\"/c/Program Files/Docker/Docker/resources/bin:$PATH\" docker compose down:*)",
       "Bash(/tmp/api_logs_command.txt)",
-      "Bash(git fetch:*)"
+      "Bash(git fetch:*)",
+      "Bash(ls:*)"
     ],
     "deny": [],
     "ask": []

@@ -70,7 +70,7 @@ export const useAuthStore = create<AuthState>()(
       isAuthenticated: false,
       isLoading: false,
       error: null,
-      _hasHydrated: false, // Will be set to true after first render
+      _hasHydrated: false,
 
       // Actions
       login: async (credentials: LoginRequest) => {
@@ -207,28 +207,29 @@ export const useAuthStore = create<AuthState>()(
         refreshToken: state.refreshToken,
         isAuthenticated: state.isAuthenticated,
       }),
+      onRehydrateStorage: () => {
+        console.log('[Auth Store] Starting rehydration...');
+        return (state, error) => {
+          if (error) {
+            console.error('[Auth Store] Rehydration error:', error);
+          } else {
+            console.log('[Auth Store] Rehydration complete. Setting _hasHydrated to true');
+            console.log('[Auth Store] Current auth state:', {
+              isAuthenticated: state?.isAuthenticated,
+              hasUser: !!state?.user,
+              hasTokens: !!(state?.accessToken && state?.refreshToken),
+            });
+            // Set hydration flag immediately
+            if (state) {
+              state._hasHydrated = true;
+            }
+            console.log('[Auth Store] ✓ _hasHydrated set to true');
+          }
+        };
+      },
     }
   )
 );
-
-// Set hydration flag after store creation
-// Rehydration from localStorage happens synchronously during create()
-// So by this point, the store is fully rehydrated and ready
-if (typeof window !== 'undefined') {
-  console.log('[Auth Store] Setting up post-creation hydration flag...');
-  // Use setTimeout to ensure this runs after current call stack
-  // This guarantees useAuthStore variable is fully assigned
-  setTimeout(() => {
-    const currentState = useAuthStore.getState();
-    console.log('[Auth Store] Setting _hasHydrated to true. Current auth state:', {
-      isAuthenticated: currentState.isAuthenticated,
-      hasUser: !!currentState.user,
-      hasTokens: !!(currentState.accessToken && currentState.refreshToken),
-    });
-    useAuthStore.setState({ _hasHydrated: true });
-    console.log('[Auth Store] ✓ _hasHydrated set to true');
-  }, 0);
-}
 
 // Selectors for easier access to specific state
 export const useAuth = () => {
