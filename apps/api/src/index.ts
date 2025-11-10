@@ -80,7 +80,14 @@ async function registerPlugins() {
 
   await server.register(import('@fastify/cors'), {
     origin: process.env.NODE_ENV === 'production'
-      ? (process.env.WEB_BASE_URL || 'http://localhost:3000').split(',').map(url => url.trim())
+      ? (origin, callback) => {
+          const allowedOrigins = (process.env.WEB_BASE_URL || 'http://localhost:3000').split(',').map(url => url.trim());
+          if (allowedOrigins.includes(origin)) {
+            callback(null, true);
+          } else {
+            callback(new Error('Not allowed by CORS'), false);
+          }
+        }
       : true,
     credentials: true
   });
