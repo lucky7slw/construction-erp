@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { useAuthStore } from '@/lib/store/auth-store';
 
@@ -9,75 +9,33 @@ interface AuthGuardProps {
 }
 
 // Routes that don't require authentication
-const PUBLIC_ROUTES = ['/auth/login', '/auth/register', '/auth/forgot-password', '/auth/reset-password'];
+const PUBLIC_ROUTES = ['/auth/login', '/auth/register'];
 
 export function AuthGuard({ children }: AuthGuardProps) {
   const router = useRouter();
   const pathname = usePathname();
-  const { isAuthenticated, isLoading, refreshAuth } = useAuthStore();
-  const [isChecking, setIsChecking] = useState(true);
+  const { isAuthenticated, isLoading } = useAuthStore();
 
   // Check if current route is public
   const isPublicRoute = PUBLIC_ROUTES.some(route => pathname.startsWith(route));
 
   useEffect(() => {
-    const checkAuth = async () => {
-      // Skip auth check for public routes
-      if (isPublicRoute) {
-        setIsChecking(false);
-        return;
-      }
+    // Don't do anything while loading
+    if (isLoading) return;
 
-      // If not authenticated, try to refresh from stored tokens
-      if (!isAuthenticated && !isLoading) {
-        try {
-          await refreshAuth();
-        } catch (error) {
-          // Refresh failed, redirect to login
-          console.log('[AuthGuard] Session expired, redirecting to login');
-          router.push(`/auth/login?redirect=${encodeURIComponent(pathname)}`);
-          return;
-        }
-      }
-
-      setIsChecking(false);
-    };
-
-    checkAuth();
-  }, [pathname, isAuthenticated, isLoading, refreshAuth, router, isPublicRoute]);
-
-  // Redirect to login if not authenticated (and not already on a public route)
-  useEffect(() => {
-    if (!isChecking && !isAuthenticated && !isLoading && !isPublicRoute) {
-      console.log('[AuthGuard] Not authenticated, redirecting to login');
+    // Redirect to login if not authenticated and trying to access protected route
+    if (!isAuthenticated && !isPublicRoute) {
       router.push(`/auth/login?redirect=${encodeURIComponent(pathname)}`);
+      return;
     }
-  }, [isChecking, isAuthenticated, isLoading, isPublicRoute, pathname, router]);
 
-  // Redirect authenticated users away from auth pages
-  useEffect(() => {
-    if (!isChecking && isAuthenticated && isPublicRoute) {
-      console.log('[AuthGuard] Already authenticated, redirecting to dashboard');
+    // Redirect to dashboard if authenticated and trying to access auth pages
+    if (isAuthenticated && isPublicRoute) {
       router.push('/dashboard');
+      return;
     }
-  }, [isChecking, isAuthenticated, isPublicRoute, router]);
+  }, [isAuthenticated, isLoading, isPublicRoute, pathname, router]);
 
-  // Show loading state while checking authentication
-  if (isChecking || isLoading) {
-    return (
-      <div className="flex h-screen w-screen items-center justify-center bg-background">
-        <div className="flex flex-col items-center gap-4">
-          <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
-          <p className="text-sm text-muted-foreground">Checking authentication...</p>
-        </div>
-      </div>
-    );
-  }
-
-  // Don't render protected content if not authenticated
-  if (!isAuthenticated && !isPublicRoute) {
-    return null;
-  }
-
+  // Just render children - let the redirects handle navigation
   return <>{children}</>;
 }
