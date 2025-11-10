@@ -207,17 +207,18 @@ export const useAuthStore = create<AuthState>()(
         refreshToken: state.refreshToken,
         isAuthenticated: state.isAuthenticated,
       }),
-      onRehydrateStorage: () => (state) => {
-        // Immediately set tokens in API client after rehydration
-        if (state?.accessToken && state?.refreshToken) {
-          apiClient.setAccessToken(state.accessToken);
-          apiClient.setRefreshToken(state.refreshToken);
-        }
+      onRehydrateStorage: (state) => {
+        // This runs before rehydration - return callback that runs after
+        return (state, error) => {
+          // Immediately set tokens in API client after rehydration
+          if (state?.accessToken && state?.refreshToken) {
+            apiClient.setAccessToken(state.accessToken);
+            apiClient.setRefreshToken(state.refreshToken);
+          }
 
-        // Mark as hydrated
-        if (state) {
-          state.setHasHydrated(true);
-        }
+          // Mark as hydrated - use setState directly since we can't call actions on state object
+          useAuthStore.setState({ _hasHydrated: true });
+        };
       },
     }
   )
