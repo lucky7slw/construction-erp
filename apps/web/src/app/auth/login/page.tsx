@@ -1,9 +1,11 @@
 'use client';
 
+import { Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { LoginForm } from '@/components/auth/login-form';
+import { PageSpinner } from '@/components/ui/spinner';
 
-export default function LoginPage() {
+function LoginPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -13,5 +15,13 @@ export default function LoginPage() {
     <LoginForm
       onSuccess={() => router.push(redirect)}
     />
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={<PageSpinner message="Loading..." />}>
+      <LoginPageContent />
+    </Suspense>
   );
 }
