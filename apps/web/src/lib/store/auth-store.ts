@@ -10,6 +10,7 @@ interface AuthState {
   isAuthenticated: boolean;
   isLoading: boolean;
   error: string | null;
+  _hasHydrated: boolean;
 
   // Actions
   login: (credentials: LoginRequest) => Promise<void>;
@@ -19,6 +20,7 @@ interface AuthState {
   clearError: () => void;
   setLoading: (loading: boolean) => void;
   setUser: (user: User) => void;
+  setHasHydrated: (hydrated: boolean) => void;
 }
 
 const STORAGE_KEY = 'hhhomespm-auth';
@@ -68,6 +70,7 @@ export const useAuthStore = create<AuthState>()(
       isAuthenticated: false,
       isLoading: false,
       error: null,
+      _hasHydrated: false,
 
       // Actions
       login: async (credentials: LoginRequest) => {
@@ -189,6 +192,10 @@ export const useAuthStore = create<AuthState>()(
       setUser: (user: User) => {
         set({ user });
       },
+
+      setHasHydrated: (hydrated: boolean) => {
+        set({ _hasHydrated: hydrated });
+      },
     }),
     {
       name: STORAGE_KEY,
@@ -200,12 +207,16 @@ export const useAuthStore = create<AuthState>()(
         refreshToken: state.refreshToken,
         isAuthenticated: state.isAuthenticated,
       }),
-onRehydrateStorage: () => (state) => {
+      onRehydrateStorage: () => (state) => {
         // Immediately set tokens in API client after rehydration
         if (state?.accessToken && state?.refreshToken) {
           apiClient.setAccessToken(state.accessToken);
           apiClient.setRefreshToken(state.refreshToken);
+        }
 
+        // Mark as hydrated
+        if (state) {
+          state.setHasHydrated(true);
         }
       },
     }

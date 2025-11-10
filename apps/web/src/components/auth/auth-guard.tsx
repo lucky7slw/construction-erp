@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { useAuthStore } from '@/lib/store/auth-store';
 
@@ -14,20 +14,14 @@ const PUBLIC_ROUTES = ['/auth/login', '/auth/register'];
 export function AuthGuard({ children }: AuthGuardProps) {
   const router = useRouter();
   const pathname = usePathname();
-  const { isAuthenticated, isLoading } = useAuthStore();
-  const [hasHydrated, setHasHydrated] = useState(false);
-
-  // Wait for zustand to rehydrate from localStorage
-  useEffect(() => {
-    setHasHydrated(true);
-  }, []);
+  const { isAuthenticated, isLoading, _hasHydrated } = useAuthStore();
 
   // Check if current route is public
   const isPublicRoute = PUBLIC_ROUTES.some(route => pathname.startsWith(route));
 
   useEffect(() => {
     // Don't do anything until store has rehydrated
-    if (!hasHydrated) return;
+    if (!_hasHydrated) return;
 
     // Don't do anything while loading
     if (isLoading) return;
@@ -43,10 +37,10 @@ export function AuthGuard({ children }: AuthGuardProps) {
       router.push('/dashboard');
       return;
     }
-  }, [hasHydrated, isAuthenticated, isLoading, isPublicRoute, pathname, router]);
+  }, [_hasHydrated, isAuthenticated, isLoading, isPublicRoute, pathname, router]);
 
   // Show loading while hydrating
-  if (!hasHydrated) {
+  if (!_hasHydrated) {
     return (
       <div className="flex h-screen w-screen items-center justify-center bg-background">
         <div className="flex flex-col items-center gap-4">
