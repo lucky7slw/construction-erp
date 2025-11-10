@@ -17,10 +17,13 @@ export function AuthGuard({ children }: AuthGuardProps) {
   const { isAuthenticated, isLoading, refreshAuth } = useAuthStore();
   const [isChecking, setIsChecking] = useState(true);
 
+  // Check if current route is public
+  const isPublicRoute = PUBLIC_ROUTES.some(route => pathname.startsWith(route));
+
   useEffect(() => {
     const checkAuth = async () => {
       // Skip auth check for public routes
-      if (PUBLIC_ROUTES.some(route => pathname.startsWith(route))) {
+      if (isPublicRoute) {
         setIsChecking(false);
         return;
       }
@@ -41,25 +44,23 @@ export function AuthGuard({ children }: AuthGuardProps) {
     };
 
     checkAuth();
-  }, [pathname, isAuthenticated, isLoading, refreshAuth, router]);
+  }, [pathname, isAuthenticated, isLoading, refreshAuth, router, isPublicRoute]);
 
   // Redirect to login if not authenticated (and not already on a public route)
   useEffect(() => {
-    if (!isChecking && !isAuthenticated && !isLoading) {
-      if (!PUBLIC_ROUTES.some(route => pathname.startsWith(route))) {
-        console.log('[AuthGuard] Not authenticated, redirecting to login');
-        router.push(`/auth/login?redirect=${encodeURIComponent(pathname)}`);
-      }
+    if (!isChecking && !isAuthenticated && !isLoading && !isPublicRoute) {
+      console.log('[AuthGuard] Not authenticated, redirecting to login');
+      router.push(`/auth/login?redirect=${encodeURIComponent(pathname)}`);
     }
-  }, [isChecking, isAuthenticated, isLoading, pathname, router]);
+  }, [isChecking, isAuthenticated, isLoading, isPublicRoute, pathname, router]);
 
   // Redirect authenticated users away from auth pages
   useEffect(() => {
-    if (!isChecking && isAuthenticated && PUBLIC_ROUTES.some(route => pathname.startsWith(route))) {
+    if (!isChecking && isAuthenticated && isPublicRoute) {
       console.log('[AuthGuard] Already authenticated, redirecting to dashboard');
       router.push('/dashboard');
     }
-  }, [isChecking, isAuthenticated, pathname, router]);
+  }, [isChecking, isAuthenticated, isPublicRoute, router]);
 
   // Show loading state while checking authentication
   if (isChecking || isLoading) {
@@ -74,7 +75,7 @@ export function AuthGuard({ children }: AuthGuardProps) {
   }
 
   // Don't render protected content if not authenticated
-  if (!isAuthenticated && !PUBLIC_ROUTES.some(route => pathname.startsWith(route))) {
+  if (!isAuthenticated && !isPublicRoute) {
     return null;
   }
 
