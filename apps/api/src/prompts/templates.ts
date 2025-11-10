@@ -368,6 +368,130 @@ RESPOND WITH VALID JSON in this EXACT format:
 
 CRITICAL: Ensure all numbers are valid decimals. DO NOT use placeholder values. Calculate real estimates based on the project scope.
 `
+  },
+
+  PROPERTY_MARKET_ANALYSIS: {
+    id: 'property_market_analysis',
+    name: 'Property Market Analysis',
+    category: 'analysis',
+    version: '1.0.0',
+    description: 'Analyzes real estate property for flip house investment decisions including sell vs rent comparison',
+    variables: ['address', 'squareFeet', 'bedrooms', 'bathrooms', 'propertyType', 'yearBuilt', 'lotSize', 'purchasePrice', 'renovationBudget'],
+    template: `
+You are an expert real estate analyst and investment advisor specializing in house flipping and rental property analysis. Conduct a comprehensive market analysis for the following property.
+
+PROPERTY DETAILS:
+Address: {{address}}
+Square Feet: {{squareFeet}}
+Bedrooms: {{bedrooms}}
+Bathrooms: {{bathrooms}}
+Property Type: {{propertyType}}
+{{#yearBuilt}}Year Built: {{yearBuilt}}{{/yearBuilt}}
+{{#lotSize}}Lot Size: {{lotSize}} sq ft{{/lotSize}}
+{{#purchasePrice}}Purchase Price: ${{purchasePrice}}{{/purchasePrice}}
+{{#renovationBudget}}Renovation Budget: ${{renovationBudget}}{{/renovationBudget}}
+
+ANALYSIS REQUIREMENTS:
+
+1. MARKET VALUE ANALYSIS:
+   - Research comparable properties in the area
+   - Estimate current market value
+   - Calculate After Repair Value (ARV) if renovation budget provided
+   - Determine realistic price range (low, mid, high)
+   - Estimate days on market based on local trends
+   - Assess current market trend (rising, stable, declining)
+
+2. RENTAL ANALYSIS:
+   - Estimate monthly rental income based on comparable rentals
+   - Calculate rental yield percentage (annual)
+   - Provide rental price range (low, mid, high)
+   - Assess occupancy rate based on local market
+   - Evaluate rental demand (high, medium, low)
+
+3. SELL VS RENT COMPARISON:
+   - Calculate projected ROI for selling after flip
+   - Calculate projected ROI for holding as rental (including cash flow)
+   - Estimate break-even point for rental strategy
+   - Provide clear recommendation: SELL, RENT, or NEUTRAL
+   - Explain reasoning for recommendation with specific financial projections
+
+4. MARKET INSIGHTS:
+   - Rate neighborhood quality (1-10 scale)
+   - Provide 3-5 comparable properties with actual data points
+   - List key market insights and trends
+   - Identify risks specific to this investment
+   - Highlight opportunities and value-add potential
+
+RESPOND WITH VALID JSON:
+{
+  "estimatedMarketValue": 350000,
+  "estimatedARV": 420000,
+  "saleRecommendation": "BUY",
+  "salePriceRange": {
+    "low": 400000,
+    "mid": 420000,
+    "high": 450000
+  },
+  "daysOnMarket": 45,
+  "marketTrend": "RISING",
+
+  "estimatedMonthlyRent": 2800,
+  "rentalYield": 7.2,
+  "rentPriceRange": {
+    "low": 2500,
+    "mid": 2800,
+    "high": 3100
+  },
+  "occupancyRate": 95,
+  "rentalDemand": "HIGH",
+
+  "sellVsRentRecommendation": "RENT",
+  "sellVsRentReasoning": "Detailed analysis comparing both strategies. In this market, rental income provides consistent cash flow of $X per month with Y% annual return, while selling would net $Z after costs. Rental is recommended because [specific reasons based on market conditions, cash flow, appreciation potential, tax benefits, etc.]",
+
+  "projectedSaleROI": 18.5,
+  "projectedRentalROI": 12.3,
+  "breakEvenMonths": 18,
+
+  "neighborhoodScore": 8,
+  "comparableProperties": [
+    {
+      "address": "123 Similar St",
+      "price": 415000,
+      "squareFeet": 2100,
+      "bedrooms": 3,
+      "bathrooms": 2.5,
+      "daysOnMarket": 38
+    }
+  ],
+  "marketInsights": [
+    "Local schools rated 9/10, driving family demand",
+    "New commercial development planned 2 miles away",
+    "Historical appreciation rate of 5.2% annually"
+  ],
+  "risks": [
+    "Property tax increases expected next year",
+    "Older HVAC system may need replacement within 3 years"
+  ],
+  "opportunities": [
+    "ADU potential - lot size supports 500 sq ft addition",
+    "Kitchen and bath updates could add $40k in value"
+  ],
+
+  "confidence": 0.82,
+  "dataSource": "Analysis based on Zillow, Redfin, local MLS data, and market trends as of analysis date",
+  "analysisDate": "2024-01-15"
+}
+
+CRITICAL INSTRUCTIONS:
+1. Base estimates on REAL market data and trends for the specific location
+2. Consider property type, location quality, amenities, and condition
+3. Factor in current interest rates and economic conditions
+4. Account for closing costs, agent fees, holding costs in ROI calculations
+5. Be realistic - avoid overly optimistic projections
+6. Provide specific, actionable insights based on the property details
+7. ALL numbers must be realistic calculations, not placeholders
+8. Sell vs rent recommendation MUST include detailed financial comparison with specific numbers
+`
   }
 };
 
