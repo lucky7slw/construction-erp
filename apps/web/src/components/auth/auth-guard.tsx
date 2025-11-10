@@ -20,23 +20,41 @@ export function AuthGuard({ children }: AuthGuardProps) {
   const isPublicRoute = PUBLIC_ROUTES.some(route => pathname.startsWith(route));
 
   useEffect(() => {
+    console.log('[AuthGuard] State check:', {
+      pathname,
+      _hasHydrated,
+      isAuthenticated,
+      isLoading,
+      isPublicRoute
+    });
+
     // Don't do anything until store has rehydrated
-    if (!_hasHydrated) return;
+    if (!_hasHydrated) {
+      console.log('[AuthGuard] Waiting for rehydration...');
+      return;
+    }
 
     // Don't do anything while loading
-    if (isLoading) return;
+    if (isLoading) {
+      console.log('[AuthGuard] Auth is loading, waiting...');
+      return;
+    }
 
     // Redirect to login if not authenticated and trying to access protected route
     if (!isAuthenticated && !isPublicRoute) {
+      console.log('[AuthGuard] Not authenticated, redirecting to login');
       router.push(`/auth/login?redirect=${encodeURIComponent(pathname)}`);
       return;
     }
 
     // Redirect to dashboard if authenticated and trying to access auth pages
     if (isAuthenticated && isPublicRoute) {
+      console.log('[AuthGuard] Authenticated on auth page, redirecting to dashboard');
       router.push('/dashboard');
       return;
     }
+
+    console.log('[AuthGuard] All checks passed, rendering page');
   }, [_hasHydrated, isAuthenticated, isLoading, isPublicRoute, pathname, router]);
 
   // Show loading while hydrating
