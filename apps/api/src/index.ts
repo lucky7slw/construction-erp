@@ -249,8 +249,8 @@ async function registerRoutes() {
   await server.register(async function(fastify) {
     // Add authentication middleware to AI routes, except health endpoint
     fastify.addHook('preHandler', async (request, reply) => {
-      // Skip auth for health endpoint
-      if (request.url === '/ai/health') {
+      // Skip auth for health endpoint - check both full path and relative path
+      if (request.url.includes('/health') || request.routeOptions?.url === '/health') {
         return;
       }
       await authMiddleware.authenticate(request, reply);
