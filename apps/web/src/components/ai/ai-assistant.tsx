@@ -100,24 +100,40 @@ export function AIAssistant({ projectId, context }: AIAssistantProps) {
   };
 
   const getResponseMessage = (data: any): string => {
-    const { intent, entities, actionable } = data;
+    const { intent, entities, actionable, transcription } = data;
 
-    if (!actionable) {
-      return "I understood your message, but I'm not sure what action to take. Could you be more specific?";
+    // Handle general conversation/questions that aren't construction commands
+    if (!actionable || !intent || intent === 'UNKNOWN' || intent === 'GENERAL_QUERY') {
+      // Check if it's a general question or conversation
+      const lowerTranscription = (transcription || '').toLowerCase();
+
+      if (lowerTranscription.includes('joke')) {
+        return "Why did the construction worker bring a ladder to work? Because they wanted to reach new heights! 😄\n\nNow, is there anything construction-related I can help you with?";
+      }
+
+      if (lowerTranscription.includes('hello') || lowerTranscription.includes('hi')) {
+        return "Hello! I'm your AI construction assistant. I can help you log time, track expenses, assess project risks, and manage tasks. What can I help you with today?";
+      }
+
+      if (lowerTranscription.includes('help') || lowerTranscription.includes('what can you do')) {
+        return "I can help you with:\n• Logging time entries\n• Recording expenses\n• Updating task status\n• Reporting issues\n• Requesting materials\n• Assessing project risks\n\nJust tell me what you need!";
+      }
+
+      return "I'm specialized in construction management tasks. I can help you log time, track expenses, manage tasks, and more. Could you rephrase your request as a construction-related action?";
     }
 
     // Generate contextual responses based on intent
     switch (intent) {
       case 'LOG_TIME':
-        return `I'll log ${entities.hours || 0} hours for ${entities.task || 'this task'}. Would you like me to proceed?`;
+        return `I'll log ${entities?.hours || 0} hours for ${entities?.task || 'this task'}. Would you like me to proceed?`;
       case 'LOG_EXPENSE':
-        return `I'll record an expense of $${entities.amount || 0} for ${entities.description || 'this item'}. Should I categorize it now?`;
+        return `I'll record an expense of $${entities?.amount || 0} for ${entities?.description || 'this item'}. Should I categorize it now?`;
       case 'UPDATE_TASK':
-        return `I'll update the task status to ${entities.status || 'in progress'}. Anything else you'd like to add?`;
+        return `I'll update the task status to ${entities?.status || 'in progress'}. Anything else you'd like to add?`;
       case 'REPORT_ISSUE':
-        return `I've noted the ${entities.type || 'issue'} you reported. I'll alert the project manager immediately.`;
+        return `I've noted the ${entities?.type || 'issue'} you reported. I'll alert the project manager immediately.`;
       case 'REQUEST_MATERIALS':
-        return `Material request for ${entities.material || 'items'} has been noted. I'll add this to the procurement list.`;
+        return `Material request for ${entities?.material || 'items'} has been noted. I'll add this to the procurement list.`;
       default:
         return `I understood your request (${intent}). Let me help you with that.`;
     }
@@ -172,8 +188,8 @@ export function AIAssistant({ projectId, context }: AIAssistantProps) {
   }
 
   return (
-    <Card className="fixed bottom-6 right-6 w-96 h-[600px] shadow-xl flex flex-col z-50">
-      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4 border-b">
+    <Card className="fixed bottom-6 right-6 w-96 h-[600px] shadow-xl flex flex-col z-50 overflow-hidden">
+      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4 border-b shrink-0">
         <div className="flex items-center space-x-2">
           <div className="h-10 w-10 rounded-full bg-construction-100 flex items-center justify-center">
             <Bot className="h-6 w-6 text-construction-600" />
@@ -216,13 +232,13 @@ export function AIAssistant({ projectId, context }: AIAssistantProps) {
               >
                 <div
                   className={cn(
-                    'rounded-lg px-4 py-2 max-w-[80%]',
+                    'rounded-lg px-4 py-2 max-w-[80%] break-words overflow-wrap-anywhere',
                     message.role === 'user'
                       ? 'bg-construction-600 text-white'
                       : 'bg-muted'
                   )}
                 >
-                  <p className="text-sm">{message.content}</p>
+                  <p className="text-sm whitespace-pre-wrap break-words">{message.content}</p>
                   {message.confidence !== undefined && (
                     <p className="text-xs mt-1 opacity-70">
                       Confidence: {(message.confidence * 100).toFixed(0)}%
@@ -248,7 +264,7 @@ export function AIAssistant({ projectId, context }: AIAssistantProps) {
           </div>
         </ScrollArea>
 
-        <div className="p-4 border-t">
+        <div className="p-4 border-t shrink-0">
           <form
             onSubmit={(e) => {
               e.preventDefault();
