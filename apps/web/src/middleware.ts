@@ -5,26 +5,8 @@ import type { NextRequest } from 'next/server';
 const publicRoutes = ['/auth/login', '/auth/register', '/auth/forgot-password', '/auth/reset-password'];
 
 export function middleware(request: NextRequest) {
-  const { pathname } = request.nextUrl;
-
-  // Allow public routes
-  if (publicRoutes.some(route => pathname.startsWith(route))) {
-    return NextResponse.next();
-  }
-
-  // Check for auth token in cookies or storage
-  // Note: This is a basic check - the real auth validation happens client-side
-  // This middleware primarily prevents direct URL access to protected routes
-  const authCookie = request.cookies.get('hhhomespm-auth');
-
-  // If no auth cookie and trying to access protected route, redirect to login
-  if (!authCookie && !publicRoutes.includes(pathname)) {
-    const url = request.nextUrl.clone();
-    url.pathname = '/auth/login';
-    url.searchParams.set('redirect', pathname);
-    return NextResponse.redirect(url);
-  }
-
+  // Authentication is handled client-side by AuthGuard
+  // This middleware can be used for other purposes if needed
   return NextResponse.next();
 }
 
