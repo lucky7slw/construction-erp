@@ -37,7 +37,7 @@ const formSchema = z.object({
   name: z.string().min(1, 'Project name is required'),
   description: z.string().optional(),
   companyId: z.string().min(1, 'Company is required'),
-  status: z.enum(['DRAFT', 'PLANNING', 'ACTIVE', 'ON_HOLD', 'COMPLETED', 'CANCELLED']),
+  status: z.enum(['DRAFT', 'ACTIVE', 'ON_HOLD', 'COMPLETED', 'CANCELLED']),
   startDate: z.string().optional(),
   endDate: z.string().optional(),
   budget: z.number().optional(),
