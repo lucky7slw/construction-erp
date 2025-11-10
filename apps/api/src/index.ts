@@ -8,6 +8,7 @@ import { WebSocketService } from './services/websocket.service';
 import { authRoutes } from './routes/auth.routes';
 import { aiRoutes } from './routes/ai.routes';
 import { projectsRoutes } from './routes/projects.routes';
+import { projectSettingsRoutes } from './routes/project-settings.routes';
 import { tasksRoutes } from './routes/tasks.routes';
 import { timeEntriesRoutes } from './routes/time-entries.routes';
 import { expensesRoutes } from './routes/expenses.routes';
@@ -290,6 +291,12 @@ async function registerRoutes() {
 
     // Projects routes
     await fastify.register(projectsRoutes, {
+      prefix: '/projects',
+      prisma
+    });
+
+    // Project Settings routes
+    await fastify.register(projectSettingsRoutes, {
       prefix: '/projects',
       prisma
     });

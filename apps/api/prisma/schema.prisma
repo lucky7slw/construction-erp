@@ -372,6 +372,7 @@ model Project {
   rfis            RFI[]
   submittals      Submittal[]
   deckProjects    DeckProject[]
+  settings        ProjectSettings?
 
   @@index([companyId])
   @@index([customerId])
@@ -391,6 +392,54 @@ model ProjectUser {
 
   @@unique([userId, projectId])
   @@map("project_users")
+}
+
+model ProjectSettings {
+  id        String   @id @default(cuid())
+  projectId String   @unique
+
+  // Financial Settings
+  defaultMarkupPercent Decimal? @db.Decimal(5, 2)
+  defaultTaxRate       Decimal? @db.Decimal(5, 4)
+  billableHourlyRate   Decimal? @db.Decimal(8, 2)
+  currency             String   @default("USD")
+
+  // Time Tracking Settings
+  workingHoursPerDay Decimal @default(8) @db.Decimal(4, 2)
+  workingDaysPerWeek Int     @default(5)
+  weekStartDay       String  @default("Monday")
+  timezone           String  @default("America/New_York")
+
+  // Budget Alert Settings
+  budgetAlertEnabled   Boolean @default(true)
+  budgetAlertThreshold Decimal @default(80) @db.Decimal(5, 2) // Percentage
+  emailNotifications   Boolean @default(true)
+
+  // Task Default Settings
+  defaultTaskPriority String  @default("MEDIUM") // LOW, MEDIUM, HIGH, URGENT
+  autoAssignTasks     Boolean @default(false)
+  requireTaskApproval Boolean @default(false)
+
+  // Document Settings
+  requireDocumentApproval Boolean @default(false)
+  maxFileUploadSizeMB     Int     @default(50)
+  allowedFileTypes        Json?   // Array of allowed extensions
+
+  // Integration Settings
+  quickBooksSync     Boolean @default(false)
+  googleCalendarSync Boolean @default(false)
+
+  // Display Settings
+  dateFormat       String  @default("MM/DD/YYYY")
+  numberFormat     String  @default("en-US")
+  showCostToClient Boolean @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@map("project_settings")
 }
 
 enum TaskStatus {
