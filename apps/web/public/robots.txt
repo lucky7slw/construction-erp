@@ -1,0 +1,12 @@
+# Allow all user agents
+User-agent: *
+Allow: /
+
+# Disallow API routes
+Disallow: /api/
+
+# Disallow auth pages
+Disallow: /auth/
+
+# Sitemap
+Sitemap: https://yourdomain.com/sitemap.xml

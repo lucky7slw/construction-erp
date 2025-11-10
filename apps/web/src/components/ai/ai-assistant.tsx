@@ -232,7 +232,7 @@ export function AIAssistant({ projectId, context }: AIAssistantProps) {
               >
                 <div
                   className={cn(
-                    'rounded-lg px-4 py-2 max-w-[80%] break-words overflow-wrap-anywhere',
+                    'rounded-lg px-4 py-2 max-w-[80%] break-words [overflow-wrap:anywhere]',
                     message.role === 'user'
                       ? 'bg-construction-600 text-white'
                       : 'bg-muted'
